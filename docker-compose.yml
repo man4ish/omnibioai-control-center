@@ -3,12 +3,19 @@ services:
     image: mysql:8.0
     container_name: omnibioai-mysql
     environment:
-      MYSQL_DATABASE: omnibioai
+      # IMPORTANT:
+      # - Remove MYSQL_DATABASE so MySQL doesn't auto-create only one DB.
+      # - Use init SQL dumps to create/import BOTH: omnibioai + limsdb.
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      # Put BOTH SQL dumps in ./db-init/:
+      #   ./db-init/omnibioai.sql
+      #   ./db-init/limsdb.sql
+      # They will be executed automatically on first container init.
+      - ./db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 5s
@@ -28,10 +35,9 @@ services:
 
   toolserver:
     build:
-      context: ../omnibioai-toolserver
+      context: ./omnibioai-toolserver
     container_name: omnibioai-toolserver
     environment:
-      # optional: add toolserver config later
       TOOLSERVER_RUN_STORE_DIR: /workspace/omnibioai-toolserver/out/runs
     ports:
       - "${TOOLSERVER_PORT:-9090}:9090"
@@ -50,21 +56,18 @@ services:
 
   tes:
     build:
-      context: ../omnibioai-tool-exec
+      context: ./omnibioai-tool-exec
     container_name: omnibioai-tes
     environment:
       HOST: 0.0.0.0
-      PORT: 8080
+      PORT: "8080"
       TES_UPGRADE: "0"
-      # If TES needs to talk to toolserver:
       TOOLSERVER_BASE_URL: http://toolserver:9090
-      # If TES writes outputs:
       TES_WORKDIR: /workspace/omnibioai-tool-exec/out
     ports:
       - "${TES_PORT:-8080}:8080"
     volumes:
       - workspace:/workspace
-    # Adjust this to whatever your repo uses to start TES reliably
     command: ["bash", "-lc", "./scripts/restart_tes.sh"]
     depends_on:
       toolserver:
@@ -81,14 +84,13 @@ services:
 
   omnibioai:
     build:
-      context: ../omnibioai
+      context: ./omnibioai
     container_name: omnibioai-workbench
     environment:
       DEBUG: "1"
-      # Django
       DJANGO_SETTINGS_MODULE: omnibioai.settings
 
-      # DB
+      # OmniBioAI DB (same mysql container)
       DB_HOST: mysql
       DB_PORT: "3306"
       DB_NAME: omnibioai
@@ -101,11 +103,11 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
 
-      # Service endpoints (use docker DNS names)
+      # Service endpoints
       TES_BASE_URL: http://tes:8080
       TOOLSERVER_BASE_URL: http://toolserver:9090
 
-      # Path policy: single mounted workspace root inside containers
+      # Workspace mount
       WORKSPACE_ROOT: /workspace
     ports:
       - "${WORKBENCH_PORT:-8000}:8000"
@@ -118,10 +120,42 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    # Dev-mode runserver; later swap to gunicorn/uvicorn for prod-like
     command: ["bash", "-lc", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
     healthcheck:
       test: ["CMD", "sh", "-c", "wget -qO- http://127.0.0.1:8000/ | head -n 1 >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # Optional: add lims-x service (uses SAME mysql container, different DB)
+  lims-x:
+    build:
+      context: ./lims-x
+    container_name: lims-x
+    environment:
+      DJANGO_SETTINGS_MODULE: lab_data_manager.settings
+
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: limsdb
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOST: 0.0.0.0
+      DJANGO_SECRET_KEY: ${LIMSX_DJANGO_SECRET_KEY:-dev-secret}
+    ports:
+      - "${LIMSX_PORT:-7000}:7000"
+    volumes:
+      - workspace:/workspace
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["bash", "-lc", "python manage.py migrate && python manage.py runserver 0.0.0.0:7000"]
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://127.0.0.1:7000/ | head -n 1 >/dev/null"]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -130,4 +164,3 @@ volumes:
   mysql_data:
   workspace:
     driver: local
-

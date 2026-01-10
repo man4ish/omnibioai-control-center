@@ -20,4 +20,5 @@ backup/
 .venv
 *.log
 .DS_Store
+db-init/*.sql
 
