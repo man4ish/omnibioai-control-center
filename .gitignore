@@ -1,0 +1,23 @@
+# ---- External repos (DO NOT TRACK) ----
+omnibioai/
+lims-x/
+omnibioai-tool-exec/
+omnibioai-toolserver/
+ragbio/
+ai-dev-docker/
+backup/
+
+# ---- Runtime / outputs ----
+**/out/
+**/logs/
+**/results/
+**/mlruns/
+**/__pycache__/
+**/*.pyc
+
+# ---- Python / OS ----
+.env
+.venv
+*.log
+.DS_Store
+
