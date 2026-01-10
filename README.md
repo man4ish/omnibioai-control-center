@@ -37,31 +37,30 @@ Desktop/machine/
 
 ## Architecture
 
-```mermaid
 flowchart LR
   %% Clients
   U[User / Browser]
-  Dev[Developer CLI<br/>(tmux / curl)]
+  Dev[Developer CLI]
 
   %% Application Services
-  subgraph Apps["Application Services"]
-    WB["OmniBioAI Workbench<br/>(Django + ASGI/Channels)<br/>:8000"]
-    LS["LIMS-X<br/>(Django)<br/>:7000"]
-    TS["ToolServer<br/>(FastAPI + Uvicorn)<br/>:9090"]
-    TES["TES<br/>(Tool Execution Service)<br/>:8080"]
+  subgraph Apps[Application Services]
+    WB[OmniBioAI Workbench\nDjango + ASGI + Channels\nPort 8000]
+    LS[LIMS-X\nDjango\nPort 7000]
+    TS[ToolServer\nFastAPI + Uvicorn\nPort 9090]
+    TES[TES\nTool Execution Service\nPort 8080]
   end
 
   %% Infrastructure
-  subgraph Infra["Infrastructure"]
-    MySQL["MySQL 8<br/>DBs: omnibioai + limsdb<br/>:3306"]
-    Redis["Redis<br/>Celery + Channels<br/>:6379"]
+  subgraph Infra[Infrastructure]
+    MySQL[MySQL 8\nDatabases: omnibioai, limsdb\nPort 3306]
+    Redis[Redis\nCelery + Channels\nPort 6379]
   end
 
-  %% Shared Storage
-  subgraph Storage["Shared Workspace"]
-    WS["/workspace (Docker volume)<br/>or ~/Desktop/machine (local)"]
-    Runs["Workflow Runs / Outputs"]
-    Registry["Registries / Provenance<br/>(relative paths only)"]
+  %% Shared Workspace
+  subgraph Storage[Shared Workspace]
+    WS[Workspace Root\nDocker: /workspace\nLocal: Desktop/machine]
+    Runs[Workflow Runs and Outputs]
+    Registry[Registries and Provenance\nRelative paths only]
   end
 
   %% Client traffic
@@ -70,7 +69,7 @@ flowchart LR
   Dev --> TS
   Dev --> TES
 
-  %% Service calls
+  %% Service interactions
   WB --> TES
   TES --> TS
 
@@ -87,7 +86,7 @@ flowchart LR
   TES --> WS
   WS --> Runs
   WS --> Registry
-```
+
 
 ---
 
