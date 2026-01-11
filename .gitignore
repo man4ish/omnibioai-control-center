@@ -21,4 +21,4 @@ backup/
 *.log
 .DS_Store
 db-init/*.sql
-
+aws-tools/*

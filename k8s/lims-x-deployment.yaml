@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: lims-x
+  name: lims-x
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: lims-x
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: lims-x
+    spec:
+      containers:
+        - args:
+            - bash
+            - -lc
+            - python manage.py migrate && python manage.py runserver 0.0.0.0:7000
+          env:
+            - name: DJANGO_ALLOWED_HOST
+              value: 0.0.0.0
+            - name: DJANGO_DEBUG
+              value: "True"
+            - name: DJANGO_SECRET_KEY
+              value: dev-limsx-secret
+            - name: DJANGO_SETTINGS_MODULE
+              value: lab_data_manager.settings
+            - name: MYSQL_DATABASE
+              value: limsdb
+            - name: MYSQL_HOST
+              value: mysql
+            - name: MYSQL_PASSWORD
+              value: root
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_USER
+              value: root
+          image: lims-x
+          livenessProbe:
+            exec:
+              command:
+                - python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7000/', timeout=2).read(); print('ok')"
+            failureThreshold: 30
+            periodSeconds: 5
+            timeoutSeconds: 5
+          name: lims-x
+          ports:
+            - containerPort: 7000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /workspace
+              name: workspace
+      restartPolicy: Always
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: workspace

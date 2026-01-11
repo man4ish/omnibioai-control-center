@@ -115,6 +115,7 @@ def main() -> int:
             Path("ragbio"),
             Path("lims-x"),
             Path("omnibioai-toolserver"),
+            Path("aws-tools"),
         ]
 
     # Validate
