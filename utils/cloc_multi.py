@@ -116,6 +116,12 @@ def main() -> int:
             Path("lims-x"),
             Path("omnibioai-toolserver"),
             Path("aws-tools"),
+            Path("db-init"),
+            Path("ai-dev-docker"),
+            Path("k8s"),
+            Path("docker-compose.yml"),
+            Path("start_stack_tmux.sh"),
+            Path("smoke_test_stack.sh"),
         ]
 
     # Validate
