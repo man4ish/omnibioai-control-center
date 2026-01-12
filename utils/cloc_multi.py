@@ -26,7 +26,7 @@ from typing import Dict, List, Tuple
 # Keep this aligned with your "safe" cloc excludes (to avoid counting vendored envs / admin trees)
 EXCLUDE_DIRS = (
     "obsolete,staticfiles,node_modules,.venv,env,__pycache__,migrations,"
-    "admin,venv,gnn_env,venv_sys,work,input"
+    "admin,venv,gnn_env,venv_sys,work,input,demo"
 )
 EXCLUDE_EXTS = "svg,json,txt,csv,lock,min.js,map,md"
 NOT_MATCH_D = r"(data|uploads|downloads|cache|results|logs)"
