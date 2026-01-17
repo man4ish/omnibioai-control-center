@@ -16,24 +16,25 @@ All services are designed to run **locally**, **without mandatory cloud dependen
 
 ```text
 Desktop/machine/
-├── omnibioai/                 # OmniBioAI Workbench (Django)
-├── omnibioai-tool-exec/       # TES – Tool Execution Service
-├── omnibioai-toolserver/      # FastAPI ToolServer (Enrichr, BLAST, etc.)
-├── lims-x/                    # LIMS-X (Laboratory Information Management)
-├── ragbio/                    # RAG-based Bioinformatics Assistant
-├── omnibioai_sdk/             # Python SDK for OmniBioAI APIs
-├── aws-tools/                 # Cloud / infrastructure helper tools (optional)
+├── omnibioai/                     # OmniBioAI Workbench (Django core platform)
+├── omnibioai-tool-exec/           # TES – Tool Execution Service (local/HPC/cloud)
+├── omnibioai-toolserver/          # FastAPI ToolServer (Enrichr, BLAST, etc.)
+├── omnibioai-lims/                # Laboratory Information Management System (LIMS)
+├── omnibioai-rag/                 # RAG-based Bioinformatics Intelligence Service
+├── omnibioai_sdk/                 # Python SDK for OmniBioAI APIs
+├── omnibioai-workflow-bundles/    # Workflow bundles (Nextflow, WDL, Snakemake)
+├── aws-tools/                     # Cloud & infrastructure helper tools (optional)
 ├── utils/
-│   └── kill_port.sh           # Utility to free busy ports
-├── smoke_test_stack.sh        # Health checks for the full stack
-├── start_stack_tmux.sh        # One-command stack launcher (tmux)
-├── db-init/                   # MySQL init dumps (omnibioai + limsdb)
-│   ├── omnibioai.sql
-│   └── limsdb.sql
-├── docker-compose.yml         # Full local stack (Docker Compose)
-├── .env.example               # Environment variable template
-├── backup/                    # Archived / experimental work
-└── ai-dev-docker/             # Docker experiments (optional)
+│   └── kill_port.sh               # Utility to free busy ports
+├── smoke_test_stack.sh            # Health checks for the full local stack
+├── start_stack_tmux.sh            # One-command local stack launcher (tmux)
+├── db-init/                       # Database initialization dumps
+│   ├── omnibioai.sql              # OmniBioAI core DB
+│   └── limsdb.sql                 # LIMS database
+├── docker-compose.yml             # Full OmniBioAI local stack (Docker Compose)
+├── .env.example                   # Environment variable template
+├── backup/                        # Archived / experimental work
+└── ai-dev-docker/                 # AI & Docker experiments (optional)
 ```
 
 ---
