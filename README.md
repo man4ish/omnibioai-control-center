@@ -49,14 +49,15 @@ Desktop/machine/
 
 Each component must be cloned independently.
 
-| Component                        | Repository                                                                                         |
-| -------------------------------- | -------------------------------------------------------------------------------------------------- |
-| **OmniBioAI Workbench**          | [https://github.com/man4ish/omnibioai](https://github.com/man4ish/omnibioai)                       |
-| **Tool Execution Service (TES)** | [https://github.com/man4ish/omnibioai-tool-exec](https://github.com/man4ish/omnibioai-tool-exec)   |
-| **ToolServer**                   | [https://github.com/man4ish/omnibioai-toolserver](https://github.com/man4ish/omnibioai-toolserver) |
-| **LIMS-X**                       | [https://github.com/man4ish/lims-x](https://github.com/man4ish/lims-x)                             |
-| **RAGBio**                       | [https://github.com/man4ish/ragbio](https://github.com/man4ish/ragbio)                             |
-| **OmniBioAI SDK**                | [https://github.com/man4ish/omnibioai_sdk](https://github.com/man4ish/omnibioai_sdk)               |
+| Component                        | Repository                                                                                                     |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **OmniBioAI Workbench**          | [https://github.com/man4ish/omnibioai](https://github.com/man4ish/omnibioai)                                   |
+| **Tool Execution Service (TES)** | [https://github.com/man4ish/omnibioai-tool-exec](https://github.com/man4ish/omnibioai-tool-exec)               |
+| **ToolServer**                   | [https://github.com/man4ish/omnibioai-toolserver](https://github.com/man4ish/omnibioai-toolserver)             |
+| **LIMS (OmniBioAI-LIMS)**        | [https://github.com/man4ish/omnibioai-lims](https://github.com/man4ish/omnibioai-lims)                         |
+| **RAG Service (OmniBioAI-RAG)**  | [https://github.com/man4ish/omnibioai-rag](https://github.com/man4ish/omnibioai-rag)                           |
+| **Workflow Bundles**             | [https://github.com/man4ish/omnibioai-workflow-bundles](https://github.com/man4ish/omnibioai-workflow-bundles) |
+| **OmniBioAI SDK**                | [https://github.com/man4ish/omnibioai_sdk](https://github.com/man4ish/omnibioai_sdk)                           |
 
 This repository **only orchestrates** these projects.
 
@@ -118,127 +119,11 @@ This makes the workspace:
 | OmniBioAI Workbench | 8000         | Django UI, plugins, agents |
 | TES                 | 8080         | Workflow & tool execution  |
 | ToolServer          | 9090         | FastAPI tool APIs          |
-| LIMS-X              | 7000         | LIMS integration           |
+| OmniBioAI-LIMS      | 7000         | LIMS integration           |
 | MySQL               | 3306         | omnibioai + limsdb         |
 | Redis               | 6379         | Celery, Channels           |
 
 All ports are configurable via `.env`.
-
----
-
-## Environment Configuration
-
-Copy the template:
-
-```bash
-cp .env.example .env
-```
-
-Edit values as needed (ports, secrets, database credentials).
-
----
-
-## Docker-Based Workflow (Recommended)
-
-### 1. Build All Images
-
-```bash
-docker compose build
-```
-
-Each service builds from its **own repo-local Dockerfile**.
-
-> ⚠️ **Note**
-> Exclude large data directories via `.dockerignore` in each repo to avoid multi-GB build contexts.
-
----
-
-### 2. Export Existing Databases (One-Time)
-
-```bash
-mysqldump -u root -p omnibioai > db-init/omnibioai.sql
-mysqldump -u root -p limsdb > db-init/limsdb.sql
-```
-
-These dumps are imported automatically on first startup.
-
----
-
-### 3. Start the Full Stack
-
-```bash
-docker compose up
-```
-
-Or clean rebuild:
-
-```bash
-docker compose down -v
-docker compose up --build
-```
-
----
-
-### 4. Verify Health
-
-```bash
-curl http://localhost:9090/health
-curl http://localhost:8080/health
-curl http://localhost:8000/
-curl http://localhost:7000/
-```
-
----
-
-## One-Command Startup (Non-Docker)
-
-```bash
-bash start_stack_tmux.sh
-tmux attach -t omnibioai
-```
-
-Ideal for fast local iteration without containers.
-
----
-
-## Path Handling Policy (Critical)
-
-All persisted paths **must be relative** to the workspace root.
-
-✅ Correct:
-
-```json
-{ "path": "omnibioai/work/results/run_001" }
-```
-
-❌ Incorrect:
-
-```json
-{ "path": "/home/manish/Desktop/machine/omnibioai/..." }
-```
-
-This ensures Docker, HPC, and rename safety.
-
----
-
-## Database Model
-
-| Database    | Used By             |
-| ----------- | ------------------- |
-| `omnibioai` | OmniBioAI Workbench |
-| `limsdb`    | LIMS-X              |
-
-Single MySQL container, multiple logical databases.
-
----
-
-## Quick Debug Commands
-
-```bash
-docker compose logs -f omnibioai
-docker compose logs -f mysql
-lsof -i :8000 :8080 :9090 :7000
-```
 
 ---
 
@@ -251,3 +136,4 @@ lsof -i :8000 :8080 :9090 :7000
 ✅ Production-leaning architecture
 
 This repository acts as the **local control plane** for the OmniBioAI ecosystem.
+
