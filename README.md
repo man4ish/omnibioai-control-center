@@ -1,14 +1,25 @@
-# OmniBioAI Local Development Workspace
+# OmniBioAI Local Development & Deployment Workspace
 
-This repository defines a **local development workspace and orchestration layer** for the **OmniBioAI ecosystem**, including workflow execution, tool services, LIMS integration, AI-driven bioinformatics applications, and developer-facing utilities.
+This repository defines the **local development workspace, orchestration layer, and deployment entry point** for the **OmniBioAI ecosystem**.
 
-All services are designed to run **locally**, **without mandatory cloud dependencies**, using a shared workspace layout and reproducible startup mechanisms.
+OmniBioAI is an **open, modular, AI-powered bioinformatics platform** designed to run consistently across **local machines, on-prem servers, HPC environments, and cloud infrastructure**, with **no mandatory cloud dependencies**.
 
-> **Important**
->
-> This repository does **not** vendor or embed core application source code.
-> Each major component lives in its **own GitHub repository** and is referenced here explicitly.
-> This repository acts as a **local control plane and workspace coordinator**.
+This repository does **not** embed core application logic.
+Instead, it acts as a **control plane and workspace coordinator**, bringing together multiple independently versioned OmniBioAI components into a single runnable ecosystem.
+
+---
+
+## Purpose of This Repository
+
+This workspace provides:
+
+* A **single-root project layout** for OmniBioAI development
+* Docker Compose–based orchestration for the full stack
+* Shared configuration, data, and working directories
+* Optional offline / air-gapped deployment support
+* A foundation for HPC (Apptainer/Singularity) and Kubernetes deployments
+
+> Think of this repository as the **“assembly and runtime layer”** for OmniBioAI.
 
 ---
 
@@ -17,111 +28,184 @@ All services are designed to run **locally**, **without mandatory cloud dependen
 ```text
 Desktop/machine/
 ├── omnibioai/                     # OmniBioAI Workbench (Django core platform)
-├── omnibioai-tool-exec/           # TES – Tool Execution Service (local/HPC/cloud)
-├── omnibioai-toolserver/          # FastAPI ToolServer (Enrichr, BLAST, etc.)
-├── omnibioai-lims/                # Laboratory Information Management System (LIMS)
-├── omnibioai-rag/                 # RAG-based Bioinformatics Intelligence Service
-├── omnibioai_sdk/                 # Python SDK for OmniBioAI APIs
-├── omnibioai-workflow-bundles/    # Workflow bundles (Nextflow, WDL, Snakemake)
-├── aws-tools/                     # Cloud & infrastructure helper tools (optional)
-├── utils/
-│   └── kill_port.sh               # Utility to free busy ports
-├── smoke_test_stack.sh            # Health checks for the full local stack
-├── start_stack_tmux.sh            # One-command local stack launcher (tmux)
+├── omnibioai-tool-exec/           # Tool Execution Service (TES)
+├── omnibioai-toolserver/          # FastAPI ToolServer (external tools, APIs)
+├── omnibioai-lims/                # OmniBioAI LIMS (data & sample management)
+├── omnibioai-rag/                 # RAG & LLM-based intelligence services
+├── omnibioai_sdk/                 # Python SDK (thin client for APIs)
+├── omnibioai-workflow-bundles/    # Workflow bundles (WDL / Nextflow / Snakemake)
+│
+├── deploy/                        # Deployment definitions & packaging
+│   ├── compose/                  # Docker Compose (canonical runtime)
+│   ├── scripts/                  # Bootstrap, bundling, install helpers
+│   ├── bundle/                   # Offline / air-gapped release artifacts
+│   ├── hpc/                      # Apptainer / Singularity assets
+│   └── k8s/                      # Kubernetes / Helm (in progress)
+│
+├── data/                          # Persistent user & project data
+├── work/                          # Workflow execution workspace
+├── tmpdata/                       # Temporary / scratch data
+├── out/                           # Generated outputs
+│
 ├── db-init/                       # Database initialization dumps
-│   ├── omnibioai.sql              # OmniBioAI core DB
-│   └── limsdb.sql                 # LIMS database
-├── docker-compose.yml             # Full OmniBioAI local stack (Docker Compose)
+│   ├── omnibioai.sql
+│   └── limsdb.sql
+│
+├── utils/                         # Developer utilities
+├── images/                        # Architecture & documentation images
+├── aws-tools/                     # Optional cloud & infra experiments
+├── backup/                        # Archived / experimental material
+│
+├── docker-compose.yml             # Full local OmniBioAI stack
 ├── .env.example                   # Environment variable template
-├── backup/                        # Archived / experimental work
-└── ai-dev-docker/                 # AI & Docker experiments (optional)
+└── README.md
 ```
 
 ---
 
-## Architecture
+## Architecture Overview
 
 ![Architecture](images/ecosystem.png)
+
+The ecosystem follows a **service-oriented, plugin-first architecture**, with clear separation between:
+
+* **Control plane** (UI, registries, APIs, metadata)
+* **Compute plane** (workflow runners, tool execution, HPC adapters)
+* **Data plane** (objects, artifacts, workflow outputs)
+* **AI plane** (RAG, LLM-backed reasoning, agents)
 
 ---
 
 ## Canonical Repositories
 
-Each component must be cloned independently.
+Each OmniBioAI component is developed and versioned independently.
 
 | Component                        | Repository                                                                                                     |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | **OmniBioAI Workbench**          | [https://github.com/man4ish/omnibioai](https://github.com/man4ish/omnibioai)                                   |
 | **Tool Execution Service (TES)** | [https://github.com/man4ish/omnibioai-tool-exec](https://github.com/man4ish/omnibioai-tool-exec)               |
 | **ToolServer**                   | [https://github.com/man4ish/omnibioai-toolserver](https://github.com/man4ish/omnibioai-toolserver)             |
-| **LIMS (OmniBioAI-LIMS)**        | [https://github.com/man4ish/omnibioai-lims](https://github.com/man4ish/omnibioai-lims)                         |
-| **RAG Service (OmniBioAI-RAG)**  | [https://github.com/man4ish/omnibioai-rag](https://github.com/man4ish/omnibioai-rag)                           |
+| **OmniBioAI LIMS**               | [https://github.com/man4ish/omnibioai-lims](https://github.com/man4ish/omnibioai-lims)                         |
+| **RAG Service**                  | [https://github.com/man4ish/omnibioai-rag](https://github.com/man4ish/omnibioai-rag)                           |
 | **Workflow Bundles**             | [https://github.com/man4ish/omnibioai-workflow-bundles](https://github.com/man4ish/omnibioai-workflow-bundles) |
 | **OmniBioAI SDK**                | [https://github.com/man4ish/omnibioai_sdk](https://github.com/man4ish/omnibioai_sdk)                           |
 
-This repository **only orchestrates** these projects.
+This repository **orchestrates** these projects; it does not vendor them.
 
 ---
 
-## Developer SDK & Utilities
+## Local Deployment (Docker)
 
-### OmniBioAI SDK
+### Prerequisites
 
-`omnibioai_sdk/` provides a lightweight Python SDK for interacting with OmniBioAI APIs, including:
+* Docker Engine / Docker Desktop
+* Docker Compose v2+
 
-* Object registry access
-* Development APIs (`/api/dev/*`)
-* Notebook-based analysis workflows
+### Quick Start
 
-The SDK is published independently on **PyPI** and is intended for:
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+Optional (LLM backend):
+
+```bash
+docker compose exec ollama ollama pull llama3:8b
+```
+
+All services are configurable via `.env`.
+No absolute host paths are required.
+
+---
+
+## Offline / Air-Gapped Deployment
+
+OmniBioAI supports **fully offline deployment** using prebuilt bundles.
+
+An offline bundle can include:
+
+* Docker images (`docker save`)
+* Pre-seeded volumes (MySQL, object store, Ollama models)
+* Compose configuration and installer scripts
+
+This enables:
+
+* Deployment on secure networks
+* HPC head nodes
+* Restricted enterprise environments
+
+See `deploy/` for details.
+
+---
+
+## HPC Deployment (Apptainer / Singularity)
+
+HPC environments typically prohibit Docker daemons. OmniBioAI supports HPC by running **compute services** via Apptainer/Singularity while keeping the control plane external.
+
+Typical pattern:
+
+* **Control plane**: local server, VM, or cloud
+* **Compute plane**: HPC nodes (tool execution, workflow runners)
+
+OCI images are converted to `.sif` images and run without root privileges.
+
+---
+
+## Kubernetes Deployment (In Progress)
+
+* All services are OCI-compatible
+* Helm charts and manifests are under development
+* Focus areas:
+
+  * Stateful services (DB, object store)
+  * Workflow execution scaling
+  * GPU-aware AI services
+
+---
+
+## Developer SDK
+
+`omnibioai_sdk/` provides a **thin Python client** for OmniBioAI APIs, intended for:
 
 * Jupyter notebooks
-* Python scripts
+* Analysis scripts
 * Workflow tooling
-* Programmatic access to the OmniBioAI platform
+* Programmatic access
 
-> The SDK is a **thin client** and does not embed backend logic.
-
-### AWS Tools (Optional)
-
-`aws-tools/` contains experimental and optional utilities for:
-
-* Cloud execution
-* Infrastructure prototyping
-* Deployment experiments
-
-These tools are **not required** for local development and may change independently.
+The SDK does **not** embed backend logic and is published independently on PyPI.
 
 ---
 
 ## Design Principles
 
-* **Single workspace root**
-* **Relative paths only**
-* **No hardcoded absolute paths**
-* **Service isolation via ports**
-* **Restart-safe startup**
-* **Docker ↔ non-Docker parity**
+* Single workspace root
+* Relative paths only
+* No hardcoded absolute paths
+* Clear service boundaries
+* Restart-safe orchestration
+* Docker ↔ non-Docker parity
+* Portable across environments
 
-This makes the workspace:
+These principles allow the same ecosystem to run on:
 
-* Portable across machines
-* Safe to rename or relocate
-* Suitable for Docker, HPC, or VM environments
-* Stable for long-running research workflows
+* Laptops
+* Servers
+* HPC clusters
+* Cloud platforms
 
 ---
 
-## Services & Ports
+## Services & Default Ports
 
-| Service             | Default Port | Description                |
-| ------------------- | ------------ | -------------------------- |
-| OmniBioAI Workbench | 8000         | Django UI, plugins, agents |
-| TES                 | 8080         | Workflow & tool execution  |
-| ToolServer          | 9090         | FastAPI tool APIs          |
-| OmniBioAI-LIMS      | 7000         | LIMS integration           |
-| MySQL               | 3306         | omnibioai + limsdb         |
-| Redis               | 6379         | Celery, Channels           |
+| Service                | Port | Description               |
+| ---------------------- | ---- | ------------------------- |
+| OmniBioAI Workbench    | 8000 | UI, plugins, agents       |
+| Tool Execution Service | 8080 | Workflow & tool execution |
+| ToolServer             | 9090 | External tool APIs        |
+| OmniBioAI LIMS         | 7000 | LIMS integration          |
+| MySQL                  | 3306 | Metadata databases        |
+| Redis                  | 6379 | Celery, caching           |
 
 All ports are configurable via `.env`.
 
@@ -129,11 +213,10 @@ All ports are configurable via `.env`.
 
 ## Status
 
-✅ Clean workspace
-✅ Docker + non-Docker parity
-✅ Multi-database MySQL
-✅ No absolute paths
-✅ Production-leaning architecture
+* ✅ Clean, modular workspace
+* ✅ Multi-service Docker orchestration
+* ✅ Offline-capable architecture
+* ✅ HPC-friendly execution model
+* ✅ Production-oriented structure
 
-This repository acts as the **local control plane** for the OmniBioAI ecosystem.
-
+This repository represents the **local control plane and deployment foundation** of the OmniBioAI ecosystem.
