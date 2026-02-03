@@ -48,11 +48,12 @@ This repository **orchestrates** OmniBioAI components; it does not vendor or for
 Desktop/machine/
 ├── omnibioai/                     # OmniBioAI Workbench (Django core platform)
 ├── omnibioai-tes/                 # Tool Execution Service (TES)
-├── omnibioai-tool-server/         # FastAPI ToolServer (external tools, APIs)
+├── omnibioai-tool-server/         # FastAPI ToolServer (validated tool APIs)
+├── omnibioai-tool-runtime/        # Cloud/HPC-agnostic execution runtime
 ├── omnibioai-lims/                # OmniBioAI LIMS (data & sample management)
 ├── omnibioai-rag/                 # RAG & LLM-based intelligence services
 ├── omnibioai_sdk/                 # Python SDK (thin client for APIs)
-├── omnibioai-workflow-bundles/    # Workflow bundles (WDL / Nextflow / Snakemake)
+├── omnibioai-workflow-bundles/    # Workflow bundles (WDL / Nextflow / Snakemake / CWL)
 │
 ├── deploy/                        # Deployment definitions & packaging
 │   ├── compose/                  # Docker Compose (canonical runtime)
@@ -72,7 +73,6 @@ Desktop/machine/
 │
 ├── utils/                         # Developer utilities
 ├── images/                        # Architecture & documentation images
-├── omni-aws-tools/                # Optional cloud & infra experiments
 ├── backup/                        # Archived / experimental material
 │
 ├── docker-compose.yml             # Full local OmniBioAI stack
@@ -80,28 +80,36 @@ Desktop/machine/
 └── README.md
 ```
 
+> **Note**
+> All executable tool containers and cloud/HPC execution contracts now live in
+> **`omnibioai-tool-runtime`**.
+> Legacy AWS-specific tooling has been consolidated to enforce a **single, backend-agnostic execution layer**.
+
 ---
 
 ## Architecture Overview
 
 The ecosystem follows a **service-oriented, plugin-first architecture** with strict separation between execution, orchestration, and reasoning.
 
-Core planes:
+### Core planes
 
 * **Control plane**
   UI, registries, APIs, metadata, provenance, governance
+
 * **Compute plane**
   Workflow runners, tool execution, HPC and cloud adapters
+
 * **Data plane**
   Objects, artifacts, datasets, workflow outputs
+
 * **AI plane**
   RAG, LLM-backed reasoning, agents, interpretation layers
 
 A key design boundary is enforced:
 
-* Control plane services are **long-lived and stateful**
-* Compute plane services are **ephemeral and replaceable**
-* TES is the **contract boundary** between the two
+* Control-plane services are **long-lived and stateful**
+* Compute-plane services are **ephemeral and replaceable**
+* **TES is the contract boundary** between the two
 
 ---
 
@@ -244,12 +252,7 @@ The SDK does **not** embed backend logic and is published independently on PyPI.
 * Docker ↔ non-Docker parity
 * Portable across environments
 
-These principles allow the same ecosystem to run on:
-
-* Laptops
-* Servers
-* HPC clusters
-* Cloud platforms
+These principles allow the same ecosystem to run on laptops, servers, HPC clusters, and cloud platforms.
 
 ---
 
@@ -272,32 +275,33 @@ All ports are configurable via `.env`.
 
 This section records **recent structural and naming changes** in the OmniBioAI ecosystem for traceability.
 
-### Renames & Clarifications
+### Execution Layer Consolidation
 
-* **Tool Execution Service (TES)** standardized as `omnibioai-tes`
+* **`omnibioai-tool-runtime`** is now the **single execution contract**
 
-  * Represents the execution control plane (submission, tracking, logs, results)
-  * Clearly separated from `omnibioai-tool-server`, which exposes validated tool APIs
+  * Used by AWS Batch, Azure Batch, Kubernetes, and HPC backends
+  * Defines logging, results, environment variables, and exit semantics
+  * Eliminates backend-specific runtime duplication
 
-* **Tool runtime** standardized as `omnibioai-tool-runtime`
+* Legacy AWS-specific tooling has been **fully consolidated**
 
-  * Defines a strict, backend-agnostic execution contract
-  * Compatible with AWS Batch, Azure Batch, Kubernetes, and on-prem/HPC environments
+  * Execution logic is no longer cloud-specific
+  * Cloud adapters live behind TES, not inside tools
 
 ### Repository Role Separation
 
-* **Control plane**: `omnibioai` (Workbench, plugins, registries, agents)
+* **Control plane**: `omnibioai`
 * **Execution plane**: `omnibioai-tes` + `omnibioai-tool-runtime`
 * **Tool APIs**: `omnibioai-tool-server`
 * **Data & metadata**: `omnibioai-lims`
 * **AI / reasoning**: `omnibioai-rag`
-* **Developer & deployment tooling**: this repository (`omnibioai-local-stack`)
+* **Assembly & deployment**: this repository
 
-This repository remains a **pure orchestration and assembly layer** and does not embed core logic from the above components.
+This repository remains a **pure orchestration and assembly layer**.
 
 ### Scale Update
 
-* OmniBioAI ecosystem size: **~190K total lines** (including code, comments, and blank lines)
+* OmniBioAI ecosystem size: **~190K total lines**
 * Multi-repository, independently versioned architecture
 
 ---
@@ -305,13 +309,9 @@ This repository remains a **pure orchestration and assembly layer** and does not
 ## Status
 
 * ✅ Clean, modular workspace
-
 * ✅ Multi-service Docker orchestration
-
 * ✅ Offline-capable architecture
-
 * ✅ HPC-friendly execution model
-
 * ✅ Production-oriented structure
 
 This repository represents the **local control plane and deployment foundation** of the OmniBioAI ecosystem.
