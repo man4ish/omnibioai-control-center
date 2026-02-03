@@ -47,8 +47,8 @@ This repository **orchestrates** OmniBioAI components; it does not vendor or for
 ```text
 Desktop/machine/
 ├── omnibioai/                     # OmniBioAI Workbench (Django core platform)
-├── omnibioai-tool-exec/           # Tool Execution Service (TES)
-├── omnibioai-toolserver/          # FastAPI ToolServer (external tools, APIs)
+├── omnibioai-tes/                 # Tool Execution Service (TES)
+├── omnibioai-tool-server/         # FastAPI ToolServer (external tools, APIs)
 ├── omnibioai-lims/                # OmniBioAI LIMS (data & sample management)
 ├── omnibioai-rag/                 # RAG & LLM-based intelligence services
 ├── omnibioai_sdk/                 # Python SDK (thin client for APIs)
@@ -112,8 +112,9 @@ Each OmniBioAI component is developed and versioned independently.
 | Component                        | Repository                                                                                                     |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | **OmniBioAI Workbench**          | [https://github.com/man4ish/omnibioai](https://github.com/man4ish/omnibioai)                                   |
-| **Tool Execution Service (TES)** | [https://github.com/man4ish/omnibioai-tool-exec](https://github.com/man4ish/omnibioai-tool-exec)               |
-| **ToolServer**                   | [https://github.com/man4ish/omnibioai-toolserver](https://github.com/man4ish/omnibioai-toolserver)             |
+| **Tool Execution Service (TES)** | [https://github.com/man4ish/omnibioai-tes](https://github.com/man4ish/omnibioai-tes)                           |
+| **Tool Runtime**                 | [https://github.com/man4ish/omnibioai-tool-runtime](https://github.com/man4ish/omnibioai-tool-runtime)         |
+| **ToolServer**                   | [https://github.com/man4ish/omnibioai-tool-server](https://github.com/man4ish/omnibioai-tool-server)           |
 | **OmniBioAI LIMS**               | [https://github.com/man4ish/omnibioai-lims](https://github.com/man4ish/omnibioai-lims)                         |
 | **RAG Service**                  | [https://github.com/man4ish/omnibioai-rag](https://github.com/man4ish/omnibioai-rag)                           |
 | **Workflow Bundles**             | [https://github.com/man4ish/omnibioai-workflow-bundles](https://github.com/man4ish/omnibioai-workflow-bundles) |
@@ -264,6 +265,40 @@ These principles allow the same ecosystem to run on:
 | Redis                  | 6379 | Celery, caching           |
 
 All ports are configurable via `.env`.
+
+---
+
+## Recent Architecture & Repository Changes (Feb 2026)
+
+This section records **recent structural and naming changes** in the OmniBioAI ecosystem for traceability.
+
+### Renames & Clarifications
+
+* **Tool Execution Service (TES)** standardized as `omnibioai-tes`
+
+  * Represents the execution control plane (submission, tracking, logs, results)
+  * Clearly separated from `omnibioai-tool-server`, which exposes validated tool APIs
+
+* **Tool runtime** standardized as `omnibioai-tool-runtime`
+
+  * Defines a strict, backend-agnostic execution contract
+  * Compatible with AWS Batch, Azure Batch, Kubernetes, and on-prem/HPC environments
+
+### Repository Role Separation
+
+* **Control plane**: `omnibioai` (Workbench, plugins, registries, agents)
+* **Execution plane**: `omnibioai-tes` + `omnibioai-tool-runtime`
+* **Tool APIs**: `omnibioai-tool-server`
+* **Data & metadata**: `omnibioai-lims`
+* **AI / reasoning**: `omnibioai-rag`
+* **Developer & deployment tooling**: this repository (`omnibioai-local-stack`)
+
+This repository remains a **pure orchestration and assembly layer** and does not embed core logic from the above components.
+
+### Scale Update
+
+* OmniBioAI ecosystem size: **~190K total lines** (including code, comments, and blank lines)
+* Multi-repository, independently versioned architecture
 
 ---
 
