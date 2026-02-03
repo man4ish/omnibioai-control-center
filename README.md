@@ -11,6 +11,11 @@ Instead, it acts as a **control plane and workspace coordinator**, assembling mu
 
 ---
 
+## Architecture Overview
+
+![OmniBioAI Architecture](images/Architecture.png)
+
+
 ## Who This Repository Is For
 
 This workspace is intended for:
