@@ -11,11 +11,6 @@ Instead, it acts as a **control plane and workspace coordinator**, assembling mu
 
 ---
 
-## Architecture Overview
-
-![OmniBioAI Architecture](images/Architecture.png)
-
-
 ## Who This Repository Is For
 
 This workspace is intended for:
@@ -53,12 +48,11 @@ This repository **orchestrates** OmniBioAI components; it does not vendor or for
 Desktop/machine/
 ├── omnibioai/                     # OmniBioAI Workbench (Django core platform)
 ├── omnibioai-tes/                 # Tool Execution Service (TES)
-├── omnibioai-tool-server/         # FastAPI ToolServer (validated tool APIs)
-├── omnibioai-tool-runtime/        # Cloud/HPC-agnostic execution runtime
+├── omnibioai-toolserver/          # FastAPI ToolServer (external tools, APIs)
 ├── omnibioai-lims/                # OmniBioAI LIMS (data & sample management)
 ├── omnibioai-rag/                 # RAG & LLM-based intelligence services
 ├── omnibioai_sdk/                 # Python SDK (thin client for APIs)
-├── omnibioai-workflow-bundles/    # Workflow bundles (WDL / Nextflow / Snakemake / CWL)
+├── omnibioai-workflow-bundles/    # Workflow bundles (WDL / Nextflow / Snakemake)
 │
 ├── deploy/                        # Deployment definitions & packaging
 │   ├── compose/                  # Docker Compose (canonical runtime)
@@ -78,6 +72,7 @@ Desktop/machine/
 │
 ├── utils/                         # Developer utilities
 ├── images/                        # Architecture & documentation images
+├── omni-aws-tools/                # Optional cloud & infra experiments
 ├── backup/                        # Archived / experimental material
 │
 ├── docker-compose.yml             # Full local OmniBioAI stack
@@ -85,55 +80,51 @@ Desktop/machine/
 └── README.md
 ```
 
-> **Note**
-> All executable tool containers and cloud/HPC execution contracts now live in
-> **`omnibioai-tool-runtime`**.
-> Legacy AWS-specific tooling has been consolidated to enforce a **single, backend-agnostic execution layer**.
-
 ---
 
 ## Architecture Overview
 
 The ecosystem follows a **service-oriented, plugin-first architecture** with strict separation between execution, orchestration, and reasoning.
 
-### Core planes
+![OmniBioAI Architecture](images/Architecture.png)
 
-* **Control plane**
+Core planes:
+
+* **Control plane**  
   UI, registries, APIs, metadata, provenance, governance
-
-* **Compute plane**
+* **Compute plane**  
   Workflow runners, tool execution, HPC and cloud adapters
-
-* **Data plane**
+* **Data plane**  
   Objects, artifacts, datasets, workflow outputs
-
-* **AI plane**
+* **AI plane**  
   RAG, LLM-backed reasoning, agents, interpretation layers
 
 A key design boundary is enforced:
 
-* Control-plane services are **long-lived and stateful**
-* Compute-plane services are **ephemeral and replaceable**
-* **TES is the contract boundary** between the two
+* Control plane services are **long-lived and stateful**
+* Compute plane services are **ephemeral and replaceable**
+* TES is the **contract boundary** between the two
 
 ---
 
 ## Canonical Repositories
 
-Each OmniBioAI component is developed and versioned independently.
+Each OmniBioAI component is developed and versioned independently. Below is the full list of core repositories in the ecosystem.
 
-| Component                        | Repository                                                                                                     |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **OmniBioAI Workbench**          | [https://github.com/man4ish/omnibioai](https://github.com/man4ish/omnibioai)                                   |
-| **Tool Execution Service (TES)** | [https://github.com/man4ish/omnibioai-tes](https://github.com/man4ish/omnibioai-tes)                           |
-| **Tool Runtime**                 | [https://github.com/man4ish/omnibioai-tool-runtime](https://github.com/man4ish/omnibioai-tool-runtime)         |
-| **ToolServer**                   | [https://github.com/man4ish/omnibioai-tool-server](https://github.com/man4ish/omnibioai-tool-server)           |
-| **OmniBioAI LIMS**               | [https://github.com/man4ish/omnibioai-lims](https://github.com/man4ish/omnibioai-lims)                         |
-| **RAG Service**                  | [https://github.com/man4ish/omnibioai-rag](https://github.com/man4ish/omnibioai-rag)                           |
-| **Workflow Bundles**             | [https://github.com/man4ish/omnibioai-workflow-bundles](https://github.com/man4ish/omnibioai-workflow-bundles) |
-| **OmniBioAI SDK**                | [https://github.com/man4ish/omnibioai_sdk](https://github.com/man4ish/omnibioai-sdk)                           |
+| Component                          | Repository URL                                                                 | Description |
+|------------------------------------|---------------------------------------------------------------------------------|-------------|
+| **OmniBioAI Workbench**            | [https://github.com/man4ish/omnibioai](https://github.com/man4ish/omnibioai)   | Modular, AI-powered bioinformatics workbench to accelerate genomic research. Features plugin-based architecture, LLM-driven intelligence, RAG. (Python, Docker, bioinformatics, plugins, workbench, rag, llm) |
+| **Tool Execution Service (TES)**   | [https://github.com/man4ish/omnibioai-tes](https://github.com/man4ish/omnibioai-tes) | Orchestrates tool execution across local, HPC, and cloud backends via adapters, handling submission, tracking, logs, and results. (CLI, FastAPI, agentic-ai, Python) |
+| **ToolServer**                     | [https://github.com/man4ish/omnibioai-toolserver](https://github.com/man4ish/omnibioai-toolserver) | FastAPI-based ToolServer providing validated, asynchronous execution APIs for bioinformatics tools. (Python, REST API) |
+| **OmniBioAI LIMS**                 | [https://github.com/man4ish/omnibioai-lims](https://github.com/man4ish/omnibioai-lims) | Lightweight Django-based Laboratory Information Management System for managing biological samples, metadata, and research projects. (Docker, REST API, LIMS, Python, sample-tracking) |
+| **RAG Service**                    | [https://github.com/man4ish/omnibioai-rag](https://github.com/man4ish/omnibioai-rag) | RAG-powered bioinformatics assistant using Hugging Face embeddings and Ollama LLMs for gene-disease literature summarization. (Machine learning, Python, Faiss, Hugging Face Transformers, LLM, LangChain, Ollama) |
+| **Workflow Bundles**               | [https://github.com/man4ish/omnibioai-workflow-bundles](https://github.com/man4ish/omnibioai-workflow-bundles) | Engine-agnostic, versioned bioinformatics workflow bundles supporting WDL, Nextflow, Snakemake, and CWL. Designed for reproducible, registry-driven pipeline plugins across genomics. (Workflow, Snakemake, WDL, CWL, Nextflow, HTML) |
+| **OmniBioAI SDK**                  | [https://github.com/man4ish/omnibioai_sdk](https://github.com/man4ish/omnibioai_sdk) | Python SDK for interacting with OmniBioAI APIs, object registry, and notebook-based bioinformatics analysis. (API, bioinformatics, AI, genomics, scientific-computing, data-platform, JupyterLab, Python) |
+| **Tool Runtime**                   | [https://github.com/man4ish/omnibioai-tool-runtime](https://github.com/man4ish/omnibioai-tool-runtime) | Minimal, cloud-agnostic tool runtime for OmniBioAI Tool Execution Service (TES). Provides strict container execution contract for AWS Batch, Azure Batch, and Kubernetes. (Python, Kubernetes, Azure, AWS Batch) |
+| **Local Stack**                    | [https://github.com/man4ish/omnibioai-local-stack](https://github.com/man4ish/omnibioai-local-stack) | Local orchestration workspace providing reproducible startup scripts and integration for OmniBioAI, TES, ToolServer, LIMS-X, and RAGBio. (Docker, LIMS, REST API, Python, RAG, LLM, Shell) |
+| **Dev Docker**                     | [https://github.com/man4ish/omnibioai-dev-docker](https://github.com/man4ish/omnibioai-dev-docker) | Full AI development environment built on NVIDIA PyTorch with CUDA, R, MySQL, JupyterLab, Hugging Face integration, and Ollama support. Designed for GPU-accelerated machine learning, data science. (Docker, CUDA, Hugging Face, AI-development, Ollama, GPU-development, Dockerfile) |
 
-This workspace **assembles and runs** these repositories; it does not replace them.
+This workspace **assembles and runs** these repositories; it does not replace them. All are actively maintained under [github.com/man4ish](https://github.com/man4ish).
 
 ---
 
@@ -257,7 +248,12 @@ The SDK does **not** embed backend logic and is published independently on PyPI.
 * Docker ↔ non-Docker parity
 * Portable across environments
 
-These principles allow the same ecosystem to run on laptops, servers, HPC clusters, and cloud platforms.
+These principles allow the same ecosystem to run on:
+
+* Laptops
+* Servers
+* HPC clusters
+* Cloud platforms
 
 ---
 
@@ -273,41 +269,6 @@ These principles allow the same ecosystem to run on laptops, servers, HPC cluste
 | Redis                  | 6379 | Celery, caching           |
 
 All ports are configurable via `.env`.
-
----
-
-## Recent Architecture & Repository Changes (Feb 2026)
-
-This section records **recent structural and naming changes** in the OmniBioAI ecosystem for traceability.
-
-### Execution Layer Consolidation
-
-* **`omnibioai-tool-runtime`** is now the **single execution contract**
-
-  * Used by AWS Batch, Azure Batch, Kubernetes, and HPC backends
-  * Defines logging, results, environment variables, and exit semantics
-  * Eliminates backend-specific runtime duplication
-
-* Legacy AWS-specific tooling has been **fully consolidated**
-
-  * Execution logic is no longer cloud-specific
-  * Cloud adapters live behind TES, not inside tools
-
-### Repository Role Separation
-
-* **Control plane**: `omnibioai`
-* **Execution plane**: `omnibioai-tes` + `omnibioai-tool-runtime`
-* **Tool APIs**: `omnibioai-tool-server`
-* **Data & metadata**: `omnibioai-lims`
-* **AI / reasoning**: `omnibioai-rag`
-* **Assembly & deployment**: this repository
-
-This repository remains a **pure orchestration and assembly layer**.
-
-### Scale Update
-
-* OmniBioAI ecosystem size: **~190K total lines**
-* Multi-repository, independently versioned architecture
 
 ---
 
