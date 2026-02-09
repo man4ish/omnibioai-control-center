@@ -25,7 +25,7 @@ At present, OmniBioAI is deployed as a **Docker Compose–based ecosystem** cons
 
 * `omnibioai` – Main web UI & API (Django)
 * `omnibioai-toolserver` – Tool registry & metadata service
-* `omnibioai-tool-exec` – Tool Execution Service (TES)
+* `omnibioai-tes` – Tool Execution Service (TES)
 * `omnibioai-workflow-service` – Workflow registry & runner
 * `omnibioai-rag` – RAG & LLM-backed knowledge services
 * `omnibioai-lims` – LIMS and data management components
@@ -114,20 +114,20 @@ HPC environments typically restrict Docker. OmniBioAI supports HPC by running **
 
 ### Supported on HPC
 
-* `omnibioai-tool-exec`
+* `omnibioai-tes`
 * Workflow executors
 * Optional: LLM inference (site dependent)
 
 ### Apptainer Build
 
 ```bash
-apptainer build omnibioai-tool-exec.sif docker://man4ish/omnibioai-tool-exec:latest
+apptainer build omnibioai-tes.sif docker://man4ish/omnibioai-tes:latest
 ```
 
 ### Run on HPC
 
 ```bash
-apptainer run omnibioai-tool-exec.sif
+apptainer run omnibioai-tes.sif
 ```
 
 This enables **scheduler-native execution** (Slurm / PBS / SGE) while preserving reproducibility.

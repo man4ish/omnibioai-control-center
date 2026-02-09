@@ -4,23 +4,29 @@ services:
     container_name: omnibioai-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      # Optional but recommended: create DBs on first init (your db-init SQL can also do this)
+      MYSQL_DATABASE: ${MYSQL_DEFAULT_DB:-omnibioai}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
       timeout: 3s
-      retries: 20
+      retries: 30
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     container_name: omnibioai-redis
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 20
+      retries: 30
+    restart: unless-stopped
 
   toolserver:
     build:
@@ -29,7 +35,7 @@ services:
     environment:
       TOOLSERVER_RUN_STORE_DIR: /workspace/omnibioai-toolserver/out/runs
     volumes:
-      - workspace:/workspace
+      - ./:/workspace
     command: >
       uvicorn toolserver_app:create_app
       --factory
@@ -42,22 +48,23 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+    restart: unless-stopped
 
   tes:
     build:
-      context: ./omnibioai-tool-exec
+      context: ./omnibioai-tes
     container_name: omnibioai-tes
     environment:
       HOST: 0.0.0.0
-      PORT: "8080"
+      PORT: "8081"
       TES_UPGRADE: "0"
       TOOLSERVER_BASE_URL: http://toolserver:9090
-      TES_WORKDIR: /workspace/omnibioai-tool-exec/out
+      TES_WORKDIR: /workspace/omnibioai-tes/out
     ports:
-      - "${TES_PORT:-8080}:8080"
+      - "${TES_PORT:-8081}:8081"
     volumes:
-      - workspace:/workspace
-    command: ["bash", "-lc", "./scripts/restart_tes.sh"]
+      - ./:/workspace
+    command: ["bash", "-lc", "cd /workspace/omnibioai-tes && bash ./scripts/start_app.sh"]
     depends_on:
       toolserver:
         condition: service_healthy
@@ -68,10 +75,11 @@ services:
     healthcheck:
       test:
         - "CMD-SHELL"
-        - "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2).read(); print('ok')\""
+        - "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/health', timeout=2).read(); print('ok')\""
       interval: 5s
       timeout: 5s
       retries: 30
+    restart: unless-stopped
 
   omnibioai:
     build:
@@ -99,8 +107,12 @@ services:
     ports:
       - "${WORKBENCH_PORT:-8000}:8000"
     volumes:
-      - workspace:/workspace
-      - ./omnibioai/data:/workspace/data:ro
+      - ./:/workspace
+      # If you truly want read-only reference data, keep it. Otherwise remove ":ro".
+      - ./data:/workspace/data
+      - ./work:/workspace/work
+      - ./out:/workspace/out
+      - ./tmpdata:/workspace/tmpdata
     depends_on:
       tes:
         condition: service_healthy
@@ -116,10 +128,52 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+    restart: unless-stopped
+
+  celery-worker:
+    build:
+      context: ./omnibioai
+    container_name: omnibioai-celery-worker
+    environment:
+      DEBUG: "1"
+      DJANGO_SETTINGS_MODULE: omnibioai.settings
+
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: omnibioai
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+
+      TES_BASE_URL: http://tes:8080
+      TOOLSERVER_BASE_URL: http://toolserver:9090
+
+      WORKSPACE_ROOT: /workspace
+    volumes:
+      - ./:/workspace
+      - ./data:/workspace/data
+      - ./work:/workspace/work
+      - ./out:/workspace/out
+      - ./tmpdata:/workspace/tmpdata
+    depends_on:
+      omnibioai:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    command: ["bash", "-lc", "celery -A omnibioai worker -l info"]
+    restart: unless-stopped
 
   lims-x:
     build:
-      context: ./lims-x
+      # Pick ONE of these depending on your folder name:
+      # context: ./lims-x
+      context: ./omnibioai-lims
     container_name: lims-x
     environment:
       DJANGO_SETTINGS_MODULE: lab_data_manager.settings
@@ -133,11 +187,10 @@ services:
       DJANGO_DEBUG: "True"
       DJANGO_SECRET_KEY: ${LIMSX_DJANGO_SECRET_KEY:-dev-secret}
       DJANGO_ALLOWED_HOSTS: "127.0.0.1,localhost"
-
     ports:
       - "${LIMSX_PORT:-7000}:7000"
     volumes:
-      - workspace:/workspace
+      - ./:/workspace
     depends_on:
       mysql:
         condition: service_healthy
@@ -151,8 +204,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+    restart: unless-stopped
 
 volumes:
   mysql_data:
-  workspace:
-    driver: local
+  redis_data:

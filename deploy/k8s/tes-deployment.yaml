@@ -35,7 +35,7 @@ spec:
             - name: TES_UPGRADE
               value: "0"
             - name: TES_WORKDIR
-              value: /workspace/omnibioai-tool-exec/out
+              value: /workspace/omnibioai-tes/out
             - name: TOOLSERVER_BASE_URL
               value: http://toolserver:9090
           image: tes

@@ -24,3 +24,4 @@ db-init/*.sql
 .DS_Store
 tmpdata/*
 data/*
+.env.example

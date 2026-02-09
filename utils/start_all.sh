@@ -8,10 +8,10 @@ echo "=============================="
 ROOT=~/Desktop/machine
 
 # ----------------------------
-# Start omnibioai-tool-exec
+# Start omnibioai-tes
 # ----------------------------
 echo "[1/2] Starting tool-exec..."
-cd $ROOT/omnibioai-tool-exec
+cd $ROOT/omnibioai-tes
 
 # kill old server if running
 pkill -f "tool_exec" || true

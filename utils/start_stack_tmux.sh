@@ -36,7 +36,7 @@ tmux new-session -d -s "$SESSION" -n tes
 
 # TES
 tmux send-keys -t "$SESSION:tes" \
-  "cd \"$ROOT/omnibioai-tool-exec\" && $(declare -f activate_env); activate_env; HOST=127.0.0.1 PORT=$TES_PORT TES_UPGRADE=0 ./scripts/restart_tes.sh" C-m
+  "cd \"$ROOT/omnibioai-tes\" && $(declare -f activate_env); activate_env; HOST=127.0.0.1 PORT=$TES_PORT TES_UPGRADE=0 ./scripts/restart_tes.sh" C-m
 
 # ToolServer
 tmux new-window -t "$SESSION" -n toolserver
