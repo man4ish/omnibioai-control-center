@@ -1,9 +1,20 @@
-# ---- External repos (DO NOT TRACK) ----
-omnibioai/*
-omnibioai_sdk/*
-lims-x/*
-omnibioai-tool-exec/*
-omnibioai-toolserver/*
+# ==================================================
+# External component repositories (DO NOT TRACK)
+# ==================================================
+omnibioai/
+omnibioai-*/
+omnibioai_sdk/
+omnibioai-lims/
+omnibioai-rag/
+omnibioai-toolserver/
+omnibioai-tool-runtime/
+omnibioai-workflow-bundles/
+omnibioai-tes/
+omnibioai-dev-docker/
+
+# Other external / archived material
+backup/
+obsolete/
 ragbio/*
 ai-dev-docker/*
 backup/*
