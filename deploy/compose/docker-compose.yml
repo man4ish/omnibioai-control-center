@@ -4,11 +4,10 @@ services:
     container_name: omnibioai-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      # Creates ONE default DB; db-init can create the rest.
       MYSQL_DATABASE: ${MYSQL_DEFAULT_DB:-omnibioai}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./db-init:/docker-entrypoint-initdb.d:ro
+      - ../../db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
@@ -30,12 +29,14 @@ services:
 
   toolserver:
     build:
-      context: ./omnibioai-toolserver
+      context: ../../omnibioai-toolserver
     container_name: omnibioai-toolserver
+    ports:
+      - "9090:9090"
     environment:
       TOOLSERVER_RUN_STORE_DIR: ${TOOLSERVER_RUN_STORE_DIR:-/workspace/omnibioai-toolserver/out/runs}
     volumes:
-      - ./:/workspace
+      - ../../:/workspace
     command: >
       uvicorn toolserver_app:create_app
       --factory
@@ -52,7 +53,7 @@ services:
 
   tes:
     build:
-      context: ./omnibioai-tes
+      context: ../../omnibioai-tes
     container_name: omnibioai-tes
     environment:
       HOST: 0.0.0.0
@@ -65,7 +66,7 @@ services:
     ports:
       - "${TES_PORT:-8081}:8081"
     volumes:
-      - ./:/workspace
+      - ../../:/workspace
     command:
       - bash
       - -lc
@@ -94,28 +95,24 @@ services:
 
   model-registry:
     build:
-      context: ./omnibioai-model-registry
+      context: ../../omnibioai-model-registry
     container_name: omnibioai-model-registry
-    # Run as your host UID/GID to avoid root-owned files in ./local_registry
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     environment:
       HOST: 0.0.0.0
       PORT: "8095"
       MODEL_REGISTRY_APP: "omnibioai_model_registry.service.app.main:app"
-
       DB_HOST: ${MYSQL_HOST:-mysql}
       DB_PORT: "${MYSQL_PORT:-3306}"
       DB_NAME: ${MODEL_REGISTRY_DB_NAME:-model_registry}
       DB_USER: ${MYSQL_USER:-root}
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-
-      # Service reads OMNIBIOAI_MODEL_REGISTRY_ROOT OR REGISTRY_ROOT
       REGISTRY_ROOT: ${REGISTRY_ROOT:-/workspace/local_registry}
     ports:
       - "${MODEL_REGISTRY_PORT:-8095}:8095"
     volumes:
-      - ./:/workspace
-      - ./local_registry:/workspace/local_registry
+      - ../../:/workspace
+      - ../../local_registry:/workspace/local_registry
     depends_on:
       mysql:
         condition: service_healthy
@@ -132,36 +129,32 @@ services:
 
   omnibioai:
     build:
-      context: ./omnibioai
+      context: ../../omnibioai
     container_name: omnibioai-workbench
     environment:
       DEBUG: "1"
       DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-omnibioai.settings}
-
       DB_HOST: ${MYSQL_HOST:-mysql}
       DB_PORT: "${MYSQL_PORT:-3306}"
       DB_NAME: ${OMNIBIOAI_DB_NAME:-omnibioai}
       DB_USER: ${MYSQL_USER:-root}
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: "${REDIS_PORT:-6379}"
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
-
       TES_BASE_URL: ${TES_BASE_URL:-http://tes:8081}
       TOOLSERVER_BASE_URL: ${TOOLSERVER_BASE_URL:-http://toolserver:9090}
       MODEL_REGISTRY_BASE_URL: ${MODEL_REGISTRY_BASE_URL:-http://model-registry:8095}
-
       WORKSPACE_ROOT: /workspace
     ports:
       - "${WORKBENCH_PORT:-8000}:8000"
     volumes:
-      - ./:/workspace
-      - ./data:/workspace/data
-      - ./work:/workspace/work
-      - ./out:/workspace/out
-      - ./tmpdata:/workspace/tmpdata
+      - ../../:/workspace
+      - ../../data:/workspace/data
+      - ../../work:/workspace/work
+      - ../../out:/workspace/out
+      - ../../tmpdata:/workspace/tmpdata
     depends_on:
       tes:
         condition: service_healthy
@@ -177,7 +170,7 @@ services:
     healthcheck:
       test:
         - "CMD-SHELL"
-        - "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=2).read(); print('ok')\""
+        - "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=2).read(); print('ok')\""
       interval: 5s
       timeout: 5s
       retries: 30
@@ -185,34 +178,30 @@ services:
 
   celery-worker:
     build:
-      context: ./omnibioai
+      context: ../../omnibioai
     container_name: omnibioai-celery-worker
     environment:
       DEBUG: "1"
       DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-omnibioai.settings}
-
       DB_HOST: ${MYSQL_HOST:-mysql}
       DB_PORT: "${MYSQL_PORT:-3306}"
       DB_NAME: ${OMNIBIOAI_DB_NAME:-omnibioai}
       DB_USER: ${MYSQL_USER:-root}
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: "${REDIS_PORT:-6379}"
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/1}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
-
       TES_BASE_URL: ${TES_BASE_URL:-http://tes:8081}
       TOOLSERVER_BASE_URL: ${TOOLSERVER_BASE_URL:-http://toolserver:9090}
       MODEL_REGISTRY_BASE_URL: ${MODEL_REGISTRY_BASE_URL:-http://model-registry:8095}
-
       WORKSPACE_ROOT: /workspace
     volumes:
-      - ./:/workspace
-      - ./data:/workspace/data
-      - ./work:/workspace/work
-      - ./out:/workspace/out
-      - ./tmpdata:/workspace/tmpdata
+      - ../../:/workspace
+      - ../../data:/workspace/data
+      - ../../work:/workspace/work
+      - ../../out:/workspace/out
+      - ../../tmpdata:/workspace/tmpdata
     depends_on:
       omnibioai:
         condition: service_healthy
@@ -227,24 +216,23 @@ services:
 
   lims-x:
     build:
-      context: ./omnibioai-lims
+      context: ../../omnibioai-lims
     container_name: lims-x
     environment:
       DJANGO_SETTINGS_MODULE: lab_data_manager.settings
-
       MYSQL_HOST: ${MYSQL_HOST:-mysql}
       MYSQL_PORT: "${MYSQL_PORT:-3306}"
       MYSQL_DATABASE: ${LIMSX_DB_NAME:-limsdb}
       MYSQL_USER: ${MYSQL_USER:-root}
       MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-
       DJANGO_DEBUG: "${LIMSX_DJANGO_DEBUG:-True}"
       DJANGO_SECRET_KEY: ${LIMSX_DJANGO_SECRET_KEY:-dev-secret}
-      DJANGO_ALLOWED_HOSTS: "127.0.0.1,localhost"
+      # IMPORTANT: allow requests coming from other containers by name
+      DJANGO_ALLOWED_HOSTS: "127.0.0.1,localhost,lims-x"
     ports:
       - "${LIMSX_PORT:-7000}:7000"
     volumes:
-      - ./:/workspace
+      - ../../:/workspace
     depends_on:
       mysql:
         condition: service_healthy
@@ -258,6 +246,52 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+    restart: unless-stopped
+
+  control-center:
+    build:
+      context: ../../omnibioai-control-center
+    container_name: omnibioai-control-center
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    environment:
+      WORKBENCH_URL: http://host.docker.internal:8001
+      WORKBENCH_HEALTH_PATH: /health/
+
+      TES_URL: http://tes:8081
+      TOOLSERVER_URL: http://toolserver:9090
+      MODEL_REGISTRY_URL: http://model-registry:8095
+
+      LIMSX_URL: http://lims-x:7000
+      LIMSX_HEALTH_PATH: /
+
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+
+    ports:
+      - "${CONTROL_CENTER_PORT:-8100}:8100"
+
+    command:
+      - bash
+      - -lc
+      - uvicorn omnibioai_control_center.app.main:app --host 0.0.0.0 --port 8100
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tes:
+        condition: service_healthy
+      toolserver:
+        condition: service_healthy
+      model-registry:
+        condition: service_healthy
+
     restart: unless-stopped
 
 volumes:
