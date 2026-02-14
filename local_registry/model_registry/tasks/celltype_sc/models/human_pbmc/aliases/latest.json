@@ -1,0 +1,9 @@
+{
+  "task": "celltype_sc",
+  "model_name": "human_pbmc",
+  "alias": "latest",
+  "version": "2026-02-14_002",
+  "updated_at": "2026-02-14T02:24:09.989254+00:00",
+  "actor": "manish",
+  "reason": "api register"
+}

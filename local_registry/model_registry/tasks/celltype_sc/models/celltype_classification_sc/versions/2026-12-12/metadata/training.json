@@ -1,0 +1,23 @@
+{
+  "algorithm": "LogisticRegression",
+  "data": {
+    "h5ad_path": "/home/manish/Desktop/machine/omnibioai/work/object_storage/ab2f8180-610b-4bbf-b9c5-32d479c7dd01.h5ad",
+    "label_key": "celltype",
+    "n_cells_used": 200,
+    "n_features": 50
+  },
+  "extra": {
+    "plugin": "celltype_classification_sc",
+    "run_id": "dcd2906b78ad4377a3c4c97ba200cda2"
+  },
+  "framework": "scikit-learn",
+  "model_name": "celltype_classification_sc",
+  "params": {
+    "C": 1.0,
+    "max_iter": 1000,
+    "random_state": 0,
+    "x_pca_key": "X_pca",
+    "x_source": "X"
+  },
+  "version": "2026-12-12"
+}

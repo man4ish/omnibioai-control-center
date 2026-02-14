@@ -1,0 +1,15 @@
+{
+  "inputs": {
+    "X": "X",
+    "format": "anndata_h5ad",
+    "label_key": "celltype"
+  },
+  "outputs": {
+    "label_column": "pred_celltype",
+    "prob_column_prefix": "prob_"
+  },
+  "preprocessing": {
+    "notes": "Baseline trainer uses X (gene matrix) or X_pca (obsm) if explicitly requested."
+  },
+  "task": "celltype_classification_sc"
+}

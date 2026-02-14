@@ -1,0 +1,3 @@
+{"task": "celltype_sc", "model_name": "celltype_classification_sc", "alias": "latest", "version": "2026-12-12", "actor": "omnibioai", "reason": "plugin train", "ts_utc": "2026-02-14T04:52:28.189206+00:00"}
+{"task": "celltype_sc", "model_name": "celltype_classification_sc", "alias": "production", "version": "2026-12-12", "actor": "manish", "reason": "baseline working", "ts_utc": "2026-02-14T04:54:27.342362+00:00"}
+{"task": "celltype_sc", "model_name": "celltype_classification_sc", "alias": "latest", "version": "2026-12-13", "actor": "omnibioai", "reason": "plugin train", "ts_utc": "2026-02-14T05:52:12.665438+00:00"}

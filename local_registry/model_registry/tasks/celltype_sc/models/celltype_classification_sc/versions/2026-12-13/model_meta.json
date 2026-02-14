@@ -1,0 +1,11 @@
+{
+  "framework": "scikit-learn",
+  "model_type": "logreg_baseline",
+  "plugin": "celltype_classification_sc",
+  "run_id": "ca32d845eec94cc586eff990719edd8d",
+  "train_accuracy": 0.625,
+  "task": "celltype_sc",
+  "model_name": "celltype_classification_sc",
+  "version": "2026-12-13",
+  "created_at": "2026-02-14T05:52:12.664393+00:00"
+}

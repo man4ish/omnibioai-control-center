@@ -1,0 +1,6 @@
+servers:
+  - server_id: local
+    display_name: Local (in-container)
+    adapter_type: local
+    enabled: true
+    config: {}

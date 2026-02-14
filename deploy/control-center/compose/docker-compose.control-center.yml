@@ -1,0 +1,15 @@
+services:
+  control-center:
+    build:
+      context: ./deploy/control-center
+      dockerfile: docker/Dockerfile
+    container_name: omnibioai-control-center
+    environment:
+      CONTROL_CENTER_CONFIG: /config/control_center.yaml
+      WORKSPACE_ROOT: /workspace
+    volumes:
+      - ./:/workspace
+      - ./deploy/control-center/config:/config:ro
+    ports:
+      - "${CONTROL_CENTER_PORT:-7070}:7070"
+    restart: unless-stopped

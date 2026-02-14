@@ -1,0 +1,9 @@
+{
+  "task": "celltype_sc",
+  "model_name": "celltype_classification_sc",
+  "alias": "latest",
+  "version": "2026-12-13",
+  "updated_at": "2026-02-14T05:52:12.665438+00:00",
+  "actor": "omnibioai",
+  "reason": "plugin train"
+}

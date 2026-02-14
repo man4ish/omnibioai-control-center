@@ -1,0 +1,3 @@
+{"task": "celltype_sc", "model_name": "human_pbmc", "alias": "latest", "version": "v0_test", "actor": null, "reason": "cli register", "ts_utc": "2026-02-14T02:14:42.498204+00:00"}
+{"task": "celltype_sc", "model_name": "human_pbmc", "alias": "latest", "version": "2026-02-14_002", "actor": "manish", "reason": "api register", "ts_utc": "2026-02-14T02:24:09.989254+00:00"}
+{"task": "celltype_sc", "model_name": "human_pbmc", "alias": "production", "version": "2026-02-14_002", "actor": "manish", "reason": "validated metrics", "ts_utc": "2026-02-14T02:24:16.269529+00:00"}

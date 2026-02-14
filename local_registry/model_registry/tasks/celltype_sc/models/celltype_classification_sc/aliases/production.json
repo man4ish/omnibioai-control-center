@@ -1,0 +1,9 @@
+{
+  "task": "celltype_sc",
+  "model_name": "celltype_classification_sc",
+  "alias": "production",
+  "version": "2026-12-12",
+  "updated_at": "2026-02-14T04:54:27.342362+00:00",
+  "actor": "manish",
+  "reason": "baseline working"
+}

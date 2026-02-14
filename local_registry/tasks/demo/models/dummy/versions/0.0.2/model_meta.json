@@ -1,0 +1,7 @@
+{
+  "note": "smoke test - required files present",
+  "task": "demo",
+  "model_name": "dummy",
+  "version": "0.0.2",
+  "created_at": "2026-02-14T08:04:41.965994+00:00"
+}

@@ -1,0 +1,12 @@
+{
+  "framework": "pytorch",
+  "model_type": "classifier",
+  "provenance": {
+    "git_commit": "abc123",
+    "trainer_version": "0.1.0"
+  },
+  "task": "celltype_sc",
+  "model_name": "human_pbmc",
+  "version": "2026-02-14_002",
+  "created_at": "2026-02-14T02:24:09.988848+00:00"
+}
