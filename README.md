@@ -13,6 +13,9 @@ The Control Center is a lightweight FastAPI service that aggregates health statu
 - **Ecosystem report** — interactive HTML report (architecture · projects · languages · coverage · health) served at `/report`
 - **JSON API** — machine-readable health summary at `/summary` for CI/CD and external monitoring
 
+## Architecure
+
+![Architecture]("images/OmniBioAI ecosystem architecture diagram.png")
 ---
 
 ## Repository Structure
