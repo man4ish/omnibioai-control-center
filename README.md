@@ -15,7 +15,7 @@ The Control Center is a lightweight FastAPI service that aggregates health statu
 
 ## Architecure
 
-![Architecture]("images/OmniBioAI ecosystem architecture diagram.png")
+![Architecture](images/OmniBioAI_ecosystem_architecture_diagram.png)
 ---
 
 ## Repository Structure
