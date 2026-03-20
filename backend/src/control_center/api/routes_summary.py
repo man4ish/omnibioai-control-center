@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 from control_center.core.settings import load_settings
 from control_center.core.runner import run_all_checks
@@ -12,8 +13,12 @@ router = APIRouter()
 
 
 @router.get("/summary")
-def summary() -> dict:
-    settings = load_settings()
+def summary() -> JSONResponse:
+    try:
+        settings = load_settings()
+    except FileNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
     service_results = run_all_checks(settings)
     disk_results = run_disk_checks(settings)
 
@@ -25,11 +30,11 @@ def summary() -> dict:
         if r["status"] == "WARN" and overall != "DOWN":
             overall = "WARN"
 
-    return {
+    return JSONResponse({
         "overall_status": overall,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "services": service_results,
         "system": {
             "disk": disk_results,
         },
-    }
+    })

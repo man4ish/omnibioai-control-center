@@ -67,7 +67,7 @@ DEFAULT_TARGETS = [
     "omnibioai-lims",
     "omnibioai-toolserver",
     "omnibioai-tool-runtime",
-    "db-init",
+    "omnibioai-control-center",
     "omnibioai-dev-docker",
     "omnibioai_sdk",
     "omnibioai-workflow-bundles",
@@ -214,7 +214,15 @@ def _has_pytest_project(repo: Path) -> bool:
         (repo / "pyproject.toml").exists()
         or (repo / "pytest.ini").exists()
         or (repo / "tests").exists()
+        or (repo / "backend" / "pyproject.toml").exists()
     )
+
+
+def _pytest_cwd(repo: Path) -> Path:
+    """Return the directory from which pytest should be run for this repo."""
+    if (repo / "backend" / "pyproject.toml").exists():
+        return repo / "backend"
+    return repo
 
 def _extract_total_line(output: str) -> Optional[str]:
     for line in output.splitlines():
@@ -289,7 +297,7 @@ def collect_coverage(target_paths: List[Path]) -> pd.DataFrame:
         if not _has_pytest_project(repo):
             row["status"] = "skipped_no_pytest_project"; rows.append(row); continue
         try:
-            proc = subprocess.run(COVERAGE_CMD, cwd=str(repo),
+            proc = subprocess.run(COVERAGE_CMD, cwd=str(_pytest_cwd(repo)),
                                   capture_output=True, text=True)
             row["returncode"] = proc.returncode
             row["stderr_tail"] = _stderr_tail(proc.stderr)
@@ -385,7 +393,7 @@ _NODE_DEFS: Dict[str, Tuple[str, int]] = {
     "omnibioai-lims":             ("Workbench",     3),
     "omnibioai-rag":              ("Workbench",     4),
     "omnibioai-workflow-bundles": ("Workbench",     5),
-    "db-init":                    ("Workbench",     6),
+    "omnibioai-control-center":   ("Workbench",     6),
     "omnibioai-toolserver":       ("Services",      0),
     "omnibioai-model-registry":   ("Services",      2),
     "omnibioai-tes":              ("Execution",     1),
@@ -403,7 +411,9 @@ _ARCH_EDGES: List[Tuple[str, str, bool]] = [
     ("omnibioai-toolserver",       "omnibioai-model-registry",False),
     ("omnibioai-toolserver",       "omnibioai-tes",           False),
     ("omnibioai-tes",              "omnibioai-tool-runtime",  False),
-    ("db-init",                    "omnibioai-lims",          False),
+    ("omnibioai-control-center",   "omnibioai",               False),
+    ("omnibioai-control-center",   "omnibioai-tes",           False),
+    ("omnibioai-control-center",   "omnibioai-toolserver",    False),
 ]
 
 _LW, _LG, _LP, _LTOP, _BH, _BG, _SLOTS = 176, 20, 14, 56, 54, 14, 7
@@ -424,6 +434,7 @@ def _short(name: str) -> str:
         ("omnibioai-workflow-bundles", "workflow-bundles"),
         ("omnibioai-model-registry",   "model-registry"),
         ("omnibioai-tool-runtime",     "tool-runtime"),
+        ("omnibioai-control-center",   "control-center"),
         ("omnibioai-toolserver",       "toolserver"),
         ("omnibioai-dev-docker",       "dev-docker"),
         ("omnibioai-lims",             "lims"),
@@ -609,7 +620,7 @@ def projects_section_html(project_totals: Dict[str, Totals], grand: Totals) -> s
   {_stats_table(table_rows, ["Project","Files","Blank","Comment","Code","Code %"])}
 </div>
 <script>
-(function(){{
+registerChartInit('tab-proj', function(){{
   new Chart(document.getElementById('proj-donut'),{{type:'doughnut',
     data:{{labels:{_jsl(dl)},datasets:[{{data:{_jsn(dv)},backgroundColor:{_jsl(dc)},borderWidth:0,hoverOffset:4}}]}},
     options:{{responsive:true,maintainAspectRatio:false,cutout:'65%',
@@ -628,7 +639,7 @@ def projects_section_html(project_totals: Dict[str, Totals], grand: Totals) -> s
       }}
     }}
   }});
-}})();
+}});
 </script>
 """
 
@@ -681,7 +692,7 @@ def languages_section_html(language_totals: Dict[str, Totals], grand: Totals) ->
   {_stats_table(table_rows, ["Language","Files","Blank","Comment","Code","Code %"])}
 </div>
 <script>
-(function(){{
+registerChartInit('tab-lang', function(){{
   new Chart(document.getElementById('lang-donut'),{{type:'doughnut',
     data:{{labels:{_jsl(dl)},datasets:[{{data:{_jsn(dv)},backgroundColor:{_jsl(dc)},borderWidth:0,hoverOffset:4}}]}},
     options:{{responsive:true,maintainAspectRatio:false,cutout:'65%',
@@ -700,7 +711,7 @@ def languages_section_html(language_totals: Dict[str, Totals], grand: Totals) ->
       }}
     }}
   }});
-}})();
+}});
 </script>
 """
 
@@ -1135,11 +1146,21 @@ def build_report(
   </div>
 </div>
 <script>
-function openTab(id,btn){{
-  document.querySelectorAll('.tab-panel').forEach(function(t){{t.classList.remove('active');}});
-  document.querySelectorAll('.tab-btn').forEach(function(b){{b.classList.remove('active');}});
+var _chartInits = {{}};
+
+function registerChartInit(tabId, fn) {{
+  _chartInits[tabId] = fn;
+}}
+
+function openTab(id, btn) {{
+  document.querySelectorAll('.tab-panel').forEach(function(t) {{ t.classList.remove('active'); }});
+  document.querySelectorAll('.tab-btn').forEach(function(b) {{ b.classList.remove('active'); }});
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  if (_chartInits[id]) {{
+    _chartInits[id]();
+    delete _chartInits[id];
+  }}
 }}
 </script>
 </body>
