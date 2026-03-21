@@ -13,21 +13,31 @@ services:
     type: http
     url: http://toolserver:9090/health
     timeout_s: 2
+    ui_url: http://localhost:9090
 
   tes:
     type: http
     url: http://tes:8081/health
     timeout_s: 2
+    ui_url: http://localhost:8081
 
   omnibioai:
     type: http
-    url: http://omnibioai:8000/
+    url: http://omnibioai:8000/health/
     timeout_s: 2
+    ui_url: http://localhost:8000
 
   lims-x:
     type: http
     url: http://lims-x:7000/
     timeout_s: 2
+    ui_url: http://localhost:7000
+
+  model-registry:
+    type: http
+    url: http://model-registry:8095/health
+    timeout_s: 2
+    ui_url: http://localhost:8095
 
 system:
   disk_checks:
@@ -37,8 +47,3 @@ system:
       warn_pct_free_below: 10
     - path: /workspace/local_registry
       warn_pct_free_below: 10
-
-  model-registry:
-    type: http
-    url: http://model-registry:8095/health
-    timeout_s: 2

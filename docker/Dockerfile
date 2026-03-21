@@ -2,18 +2,22 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Keep image small + deterministic
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install runtime deps (paths are relative to build context: repo root)
-COPY deploy/control-center/backend/pyproject.toml /app/pyproject.toml
+# System packages: cloc for code counting
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends cloc && \
+    rm -rf /var/lib/apt/lists/*
 
+# Install Python dependencies
+COPY backend/pyproject.toml /app/pyproject.toml
 RUN pip install --no-cache-dir -U pip && \
-    pip install --no-cache-dir .
+    pip install --no-cache-dir . && \
+    pip install --no-cache-dir pandas
 
-# Copy source (paths are relative to build context: repo root)
-COPY deploy/control-center/backend/src /app/src
+# Copy source
+COPY backend/src /app/src
 
 ENV PYTHONPATH=/app/src
 

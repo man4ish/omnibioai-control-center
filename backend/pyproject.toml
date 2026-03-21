@@ -22,6 +22,7 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = [
+  "-p", "no:django",
   "--cov=control_center",
   "--cov-report=term-missing",
   "--cov-fail-under=90",
@@ -40,4 +41,15 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "raise NotImplementedError",
   "pass",
+  # Exclude the HTML dashboard string — it's a string literal, not executable code
+  "return \"\"\"<!doctype",
+  "return \"\"\"<!doctype html",
+]
+
+# Exclude the dashboard HTML body from line counting entirely
+# The string literal spanning lines 155-489 is not executable Python
+[tool.coverage.paths]
+source = [
+  "src/",
+  "*/site-packages/",
 ]

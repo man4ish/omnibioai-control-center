@@ -1,0 +1,17 @@
+[run]
+source = control_center
+omit =
+    */tests/*
+    */__pycache__/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    pass
+
+[paths]
+source =
+    src/control_center
+    */site-packages/control_center

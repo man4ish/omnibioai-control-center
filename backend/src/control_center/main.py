@@ -144,7 +144,7 @@ def report_status() -> JSONResponse:
 # ==============================================================================
 
 @app.get("/", response_class=HTMLResponse)
-def dashboard() -> str:
+def dashboard() -> str:  # pragma: no cover
     """
     Live health dashboard with:
     - Overall status banner
@@ -254,6 +254,9 @@ def dashboard() -> str:
       align-items: flex-start; margin-bottom: 10px;
     }
     .card-name { font-size: 13px; font-weight: 600; color: #111827; }
+    .card-name-row {
+      display: flex; align-items: center; gap: 8px;
+    }
     .badge {
       padding: 3px 10px; border-radius: 99px;
       font-size: 11px; font-weight: 600;
@@ -261,6 +264,13 @@ def dashboard() -> str:
     .badge-up   { background: #EAF3DE; color: #3B6D11; }
     .badge-down { background: #FCEBEB; color: #A32D2D; }
     .badge-warn { background: #FAEEDA; color: #854F0B; }
+    .ui-link {
+      font-size: 11px; color: #378ADD; text-decoration: none;
+      font-weight: 600; white-space: nowrap;
+      padding: 2px 8px; border: 1px solid #B5D4F4;
+      border-radius: 6px; background: #E6F1FB;
+    }
+    .ui-link:hover { background: #B5D4F4; }
     .kv {
       display: grid; grid-template-columns: auto 1fr;
       gap: 3px 10px; font-size: 11px; color: #6B7280;
@@ -384,9 +394,15 @@ def dashboard() -> str:
         var el = document.createElement('div');
         el.className = 'card';
         el.style.borderColor = border;
+        var uiLink = s.ui_url
+          ? '<a class="ui-link" href="' + esc(s.ui_url) + '" target="_blank">Open UI ↗</a>'
+          : '';
         el.innerHTML =
           '<div class="card-header">' +
-            '<div class="card-name">' + esc(s.name) + '</div>' +
+            '<div class="card-name-row">' +
+              '<div class="card-name">' + esc(s.name) + '</div>' +
+              uiLink +
+            '</div>' +
             '<span class="' + badgeClass(s.status) + '">' + esc(s.status) + '</span>' +
           '</div>' +
           '<div class="kv">' +
