@@ -17,15 +17,15 @@ services:
 
   tes:
     type: http
-    url: http://tes:8081/health
+    url: http://omnibioai-tes:8081/health
     timeout_s: 2
     ui_url: http://localhost:8081
 
   omnibioai:
     type: http
-    url: http://omnibioai:8000/health/
+    url: http://omnibioai-workbench:8001/health/
     timeout_s: 2
-    ui_url: http://localhost:8000
+    ui_url: http://localhost:8001
 
   lims-x:
     type: http

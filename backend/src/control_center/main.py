@@ -158,88 +158,115 @@ def dashboard() -> str:  # pragma: no cover
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>OmniBioAI Control Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, Arial, sans-serif;
+      font-family: 'IBM Plex Sans', Arial, sans-serif;
       background: #F1F5F9; color: #111827;
-      padding: 28px 24px 48px;
+      padding: 32px 28px 48px;
     }
-    .wrap { max-width: 1200px; margin: 0 auto; }
+    .wrap { max-width: 1320px; margin: 0 auto; }
 
-    /* Header */
-    .header { margin-bottom: 20px; }
-    .header h1 { font-size: 20px; font-weight: 700; color: #0F172A; margin-bottom: 3px; }
-    .header .sub { font-size: 12px; color: #9CA3AF; }
+    /* ── Page header ── */
+    .page-header { margin-bottom: 6px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #0F172A; }
+    .page-sub { font-size: 12px; color: #9CA3AF; margin-bottom: 24px; }
 
-    /* Top bar */
-    .topbar {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 18px; flex-wrap: wrap;
+    /* ── KPI strip ── */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px; margin-bottom: 20px;
     }
+    .kpi-card {
+      background: white; border: 1px solid #E5E7EB;
+      border-radius: 12px; padding: 16px 18px 14px;
+      position: relative; overflow: hidden;
+    }
+    .kpi-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      border-radius: 12px 12px 0 0;
+    }
+    .kpi-card.c-gray::before  { background: #D1D5DB; }
+    .kpi-card.c-green::before { background: #639922; }
+    .kpi-card.c-red::before   { background: #E24B4A; }
+    .kpi-card.c-amber::before { background: #BA7517; }
+    .kpi-card.c-blue::before  { background: #378ADD; }
+    .kpi-label { font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .kpi-value { font-size: 26px; font-weight: 700; color: #0F172A; line-height: 1; margin-bottom: 4px; }
+    .kpi-sub   { font-size: 11px; color: #9CA3AF; }
+
+    /* ── Report panel ── */
+    .report-panel {
+      background: white; border: 1px solid #E5E7EB;
+      border-radius: 12px; padding: 18px 20px;
+      margin-bottom: 16px;
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 14px;
+    }
+    .report-left { display: flex; align-items: center; gap: 14px; }
+    .report-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: #F1F5F9; border: 1px solid #E5E7EB;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .report-title { font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 3px; }
+    .report-sub   { font-size: 11px; color: #9CA3AF; }
+    .report-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid #E5E7EB; border-top-color: #374151;
+      border-radius: 50%; animation: spin .8s linear infinite;
+      display: inline-block; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .progress-msg { font-size: 11px; color: #6B7280; }
+
+    /* ── Buttons ── */
     .btn {
       border: 1px solid #E5E7EB; border-radius: 8px;
       padding: 8px 16px; background: white; cursor: pointer;
       font-size: 13px; font-weight: 600; color: #374151;
       font-family: inherit; text-decoration: none;
       display: inline-flex; align-items: center; gap: 6px;
+      transition: background .12s;
     }
     .btn:hover { background: #F8FAFC; }
-    .btn-primary { background: #0F172A; color: white; border-color: #0F172A; }
-    .btn-primary:hover { background: #1E293B; }
-    .btn-primary:disabled {
-      background: #94A3B8; border-color: #94A3B8;
-      cursor: not-allowed; opacity: .7;
-    }
-    .btn-green { background: #ECFDF5; color: #065F46; border-color: #6EE7B7; }
+    .btn-dark { background: #0F172A; color: white; border-color: #0F172A; }
+    .btn-dark:hover { background: #1E293B; }
+    .btn-dark:disabled { background: #94A3B8; border-color: #94A3B8; cursor: not-allowed; }
+    .btn-green { background: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
     .btn-green:hover { background: #D1FAE5; }
-    .last-checked { font-size: 12px; color: #9CA3AF; margin-left: auto; }
 
-    /* Report panel */
-    .report-panel {
-      background: white; border: 1px solid #E5E7EB;
-      border-radius: 12px; padding: 16px 20px;
-      margin-bottom: 18px;
-      display: flex; align-items: center;
-      justify-content: space-between; flex-wrap: wrap; gap: 12px;
-    }
-    .report-info { flex: 1; min-width: 200px; }
-    .report-title { font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 3px; }
-    .report-sub { font-size: 11px; color: #9CA3AF; }
-    .report-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid #E5E7EB;
-      border-top-color: #374151;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-      display: inline-block; flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .progress-msg { font-size: 11px; color: #6B7280; }
-
-    /* Banner */
+    /* ── Banner ── */
     .banner {
-      border-radius: 12px; padding: 14px 18px;
-      margin-bottom: 18px;
+      border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
       display: flex; align-items: center; gap: 12px;
       border: 1px solid transparent;
     }
     .banner-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .banner-title { font-size: 14px; font-weight: 600; }
-    .banner-sub { font-size: 11px; margin-top: 2px; }
+    .banner-sub   { font-size: 11px; margin-top: 2px; }
     .banner-up   { background: #ECFDF5; border-color: #6EE7B733; }
     .banner-down { background: #FEF2F2; border-color: #FCA5A533; }
     .banner-warn { background: #FFFBEB; border-color: #FCD34D33; }
 
-    /* Section label */
+    /* ── Top bar ── */
+    .topbar {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
     .section-label {
       font-size: 11px; font-weight: 600; color: #9CA3AF;
-      text-transform: uppercase; letter-spacing: .06em;
-      margin-bottom: 12px;
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px;
     }
+    .last-checked { font-size: 12px; color: #9CA3AF; margin-left: auto; }
 
-    /* Cards */
+    /* ── Service grid ── */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -248,15 +275,15 @@ def dashboard() -> str:  # pragma: no cover
     .card {
       background: white; border-radius: 12px;
       padding: 16px; border: 1px solid #E5E7EB;
+      transition: box-shadow .15s;
     }
+    .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     .card-header {
       display: flex; justify-content: space-between;
-      align-items: flex-start; margin-bottom: 10px;
+      align-items: flex-start; margin-bottom: 12px;
     }
+    .card-name-row { display: flex; align-items: center; gap: 8px; }
     .card-name { font-size: 13px; font-weight: 600; color: #111827; }
-    .card-name-row {
-      display: flex; align-items: center; gap: 8px;
-    }
     .badge {
       padding: 3px 10px; border-radius: 99px;
       font-size: 11px; font-weight: 600;
@@ -266,56 +293,94 @@ def dashboard() -> str:  # pragma: no cover
     .badge-warn { background: #FAEEDA; color: #854F0B; }
     .ui-link {
       font-size: 11px; color: #378ADD; text-decoration: none;
-      font-weight: 600; white-space: nowrap;
-      padding: 2px 8px; border: 1px solid #B5D4F4;
-      border-radius: 6px; background: #E6F1FB;
+      font-weight: 600; padding: 2px 8px;
+      border: 1px solid #B5D4F4; border-radius: 6px;
+      background: #E6F1FB; white-space: nowrap;
     }
     .ui-link:hover { background: #B5D4F4; }
     .kv {
-      display: grid; grid-template-columns: auto 1fr;
-      gap: 3px 10px; font-size: 11px; color: #6B7280;
+      display: grid; grid-template-columns: 72px 1fr;
+      gap: 4px 8px; font-size: 11px;
     }
-    .kv-label { color: #9CA3AF; white-space: nowrap; }
-    .kv-val { word-break: break-all; }
+    .kv-k { color: #9CA3AF; }
+    .kv-v { color: #374151; word-break: break-all; }
 
-    /* Raw JSON */
+    /* ── Disk section ── */
+    .disk-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px; margin-bottom: 24px;
+    }
+    .disk-card {
+      background: white; border-radius: 12px;
+      padding: 14px 16px; border: 1px solid #E5E7EB;
+    }
+    .disk-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 8px;
+    }
+    .disk-name { font-size: 12px; font-weight: 600; color: #111827; }
+    .disk-path { font-size: 11px; color: #9CA3AF; margin-bottom: 6px; }
+    .disk-bar-track {
+      height: 5px; background: #E5E7EB;
+      border-radius: 99px; overflow: hidden; margin-bottom: 5px;
+    }
+    .disk-bar-fill { height: 100%; border-radius: 99px; }
+    .disk-msg { font-size: 11px; color: #6B7280; }
+
+    /* ── Raw JSON ── */
     .raw-toggle {
       font-size: 12px; color: #9CA3AF; cursor: pointer;
       background: none; border: none; padding: 0;
       text-decoration: underline; margin-bottom: 8px;
+      font-family: inherit;
     }
     pre {
       background: #F8FAFC; border: 1px solid #E5E7EB;
       border-radius: 10px; padding: 14px;
       overflow: auto; font-size: 11px; color: #374151;
-      display: none;
+      display: none; line-height: 1.6;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 32px; padding-top: 16px;
+      border-top: 1px solid #E5E7EB;
+      font-size: 11px; color: #9CA3AF; line-height: 1.8;
     }
   </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="header">
-    <h1>OmniBioAI Control Center</h1>
-    <div class="sub">Stateless health dashboard · auto-refreshes every 10 s</div>
+  <div class="page-header">
+    <div class="page-title">OmniBioAI Control Center</div>
+  </div>
+  <div class="page-sub">Stateless health dashboard &middot; auto-refreshes every 10 s</div>
+
+  <!-- KPI strip -->
+  <div class="kpi-strip" id="kpi-strip">
+    <div class="kpi-card c-gray"><div class="kpi-label">Services</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-sub">monitored</div></div>
+    <div class="kpi-card c-green"><div class="kpi-label">Healthy</div><div class="kpi-value" id="kpi-up">—</div><div class="kpi-sub">UP</div></div>
+    <div class="kpi-card c-red"><div class="kpi-label">Down</div><div class="kpi-value" id="kpi-down">—</div><div class="kpi-sub">need attention</div></div>
+    <div class="kpi-card c-amber"><div class="kpi-label">Degraded</div><div class="kpi-value" id="kpi-warn">—</div><div class="kpi-sub">WARN</div></div>
+    <div class="kpi-card c-blue"><div class="kpi-label">Disk warnings</div><div class="kpi-value" id="kpi-disk">—</div><div class="kpi-sub">paths checked</div></div>
   </div>
 
   <!-- Report panel -->
   <div class="report-panel">
-    <div class="report-info">
-      <div class="report-title">Ecosystem Report</div>
-      <div class="report-sub" id="report-sub">Architecture · Projects · Languages · Coverage · Health</div>
+    <div class="report-left">
+      <div class="report-icon">&#128196;</div>
+      <div>
+        <div class="report-title">Ecosystem Report</div>
+        <div class="report-sub" id="report-sub">Architecture &middot; Projects &middot; Languages &middot; Coverage &middot; Health</div>
+      </div>
     </div>
     <div class="report-actions">
       <span id="report-spinner" style="display:none;" class="spinner"></span>
       <span id="report-progress" class="progress-msg" style="display:none;"></span>
-      <button class="btn btn-primary" id="btn-generate" onclick="generateReport()">
-        Generate Report
-      </button>
-      <a class="btn btn-green" id="btn-view" href="/report" target="_blank"
-         style="display:none;">
-        View Report ↗
-      </a>
+      <button class="btn btn-dark" id="btn-generate" onclick="generateReport()">Generate Report</button>
+      <a class="btn btn-green" id="btn-view" href="/report" target="_blank" style="display:none;">View Report ↗</a>
     </div>
   </div>
 
@@ -324,18 +389,25 @@ def dashboard() -> str:  # pragma: no cover
 
   <!-- Top bar -->
   <div class="topbar">
-    <button class="btn" onclick="loadHealth()">Refresh</button>
+    <button class="btn" onclick="loadHealth()">&#8635; Refresh</button>
     <span class="last-checked" id="last"></span>
   </div>
 
   <div class="section-label">Services</div>
   <div class="grid" id="cards"></div>
 
+  <div class="section-label" id="disk-label" style="display:none;">Disk checks</div>
+  <div class="disk-grid" id="disk-cards"></div>
+
   <button class="raw-toggle" onclick="toggleRaw()">Show raw JSON</button>
   <pre id="raw"></pre>
 
-</div>
+  <div class="footer">
+    Health checks run on every refresh and auto-refresh every 10 s.<br>
+    Disk thresholds and service endpoints are configured in <code>control_center.yaml</code>.
+  </div>
 
+</div>
 <script>
   var rawVisible = false;
   var pollTimer = null;
@@ -343,13 +415,11 @@ def dashboard() -> str:  # pragma: no cover
   function toggleRaw() {
     rawVisible = !rawVisible;
     document.getElementById('raw').style.display = rawVisible ? 'block' : 'none';
-    document.querySelector('.raw-toggle').textContent =
-      rawVisible ? 'Hide raw JSON' : 'Show raw JSON';
+    document.querySelector('.raw-toggle').textContent = rawVisible ? 'Hide raw JSON' : 'Show raw JSON';
   }
 
   function esc(s) {
-    return String(s)
-      .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+    return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
   }
 
   function badgeClass(status) {
@@ -358,61 +428,110 @@ def dashboard() -> str:  # pragma: no cover
     return 'badge badge-down';
   }
 
+  function cardBorder(status) {
+    if (status === 'UP')   return '#D1FAE5';
+    if (status === 'DOWN') return '#FEE2E2';
+    return '#FEF3C7';
+  }
+
   function setBanner(overall) {
     var el = document.getElementById('banner');
-    var configs = {
-      'UP':   ['banner-up',   '#10B981', 'All systems operational'],
-      'DOWN': ['banner-down', '#EF4444', 'One or more services are down'],
-      'WARN': ['banner-warn', '#F59E0B', 'One or more services need attention'],
-    };
-    var cfg = configs[overall] || ['banner-warn', '#F59E0B', overall];
+    var cfg = {
+      'UP':   ['banner-up',   '#10B981', 'All systems operational',        'Overall: UP'],
+      'DOWN': ['banner-down', '#EF4444', 'One or more services are down',  'Overall: DOWN'],
+      'WARN': ['banner-warn', '#F59E0B', 'One or more services need attention', 'Overall: WARN'],
+    }[overall] || ['banner-warn', '#F59E0B', overall, ''];
     el.className = 'banner ' + cfg[0];
     el.style.display = 'flex';
     el.innerHTML =
       '<div class="banner-dot" style="background:' + cfg[1] + '"></div>' +
-      '<div>' +
-        '<div class="banner-title">' + esc(cfg[2]) + '</div>' +
-        '<div class="banner-sub" style="color:' + cfg[1] + '">Overall: ' + esc(overall) + '</div>' +
-      '</div>';
+      '<div><div class="banner-title">' + esc(cfg[2]) + '</div>' +
+      '<div class="banner-sub" style="color:' + cfg[1] + '">' + esc(cfg[3]) + '</div></div>';
+  }
+
+  function renderKpis(services, disk) {
+    var up   = services.filter(function(s){ return s.status==='UP'; }).length;
+    var down = services.filter(function(s){ return s.status==='DOWN'; }).length;
+    var warn = services.filter(function(s){ return s.status==='WARN'; }).length;
+    var dw   = (disk||[]).filter(function(d){ return d.status!=='UP'; }).length;
+    document.getElementById('kpi-total').textContent = services.length;
+    document.getElementById('kpi-up').textContent    = up;
+    document.getElementById('kpi-down').textContent  = down;
+    document.getElementById('kpi-warn').textContent  = warn;
+    document.getElementById('kpi-disk').textContent  = dw;
+  }
+
+  function renderServices(services) {
+    var cards = document.getElementById('cards');
+    cards.innerHTML = '';
+    for (var i = 0; i < services.length; i++) {
+      var s = services[i];
+      var latency = s.latency_ms != null ? s.latency_ms + ' ms' : '—';
+      var uiLink = s.ui_url
+        ? '<a class="ui-link" href="' + esc(s.ui_url) + '" target="_blank">Open UI ↗</a>'
+        : '';
+      var el = document.createElement('div');
+      el.className = 'card';
+      el.style.borderColor = cardBorder(s.status);
+      el.innerHTML =
+        '<div class="card-header">' +
+          '<div class="card-name-row">' +
+            '<div class="card-name">' + esc(s.name) + '</div>' + uiLink +
+          '</div>' +
+          '<span class="' + badgeClass(s.status) + '">' + esc(s.status) + '</span>' +
+        '</div>' +
+        '<div class="kv">' +
+          '<span class="kv-k">Type</span><span class="kv-v">' + esc(s.type||'—') + '</span>' +
+          '<span class="kv-k">Target</span><span class="kv-v">' + esc(s.target||'—') + '</span>' +
+          '<span class="kv-k">Latency</span><span class="kv-v">' + esc(latency) + '</span>' +
+          '<span class="kv-k">Message</span><span class="kv-v">' + esc(s.message||'—') + '</span>' +
+        '</div>';
+      cards.appendChild(el);
+    }
+  }
+
+  function renderDisk(disk) {
+    var label = document.getElementById('disk-label');
+    var grid  = document.getElementById('disk-cards');
+    if (!disk || !disk.length) { label.style.display = 'none'; grid.innerHTML = ''; return; }
+    label.style.display = 'block';
+    grid.innerHTML = '';
+    for (var i = 0; i < disk.length; i++) {
+      var d = disk[i];
+      var pctMatch = d.message ? d.message.match(/([0-9.]+)%/) : null;
+      var pct = pctMatch ? parseFloat(pctMatch[1]) : null;
+      var fillColor = d.status === 'UP' ? '#639922' : d.status === 'WARN' ? '#BA7517' : '#E24B4A';
+      var border = d.status === 'UP' ? '#D1FAE5' : d.status === 'WARN' ? '#FEF3C7' : '#FEE2E2';
+      var barHtml = pct !== null
+        ? '<div class="disk-bar-track"><div class="disk-bar-fill" style="width:' + pct.toFixed(1) + '%;background:' + fillColor + ';"></div></div>'
+        : '';
+      var el = document.createElement('div');
+      el.className = 'disk-card';
+      el.style.borderColor = border;
+      el.innerHTML =
+        '<div class="disk-header">' +
+          '<div class="disk-name">' + esc(d.name.replace('disk:','')) + '</div>' +
+          '<span class="' + badgeClass(d.status) + '">' + esc(d.status) + '</span>' +
+        '</div>' +
+        '<div class="disk-path">' + esc(d.target||'') + '</div>' +
+        barHtml +
+        '<div class="disk-msg">' + esc(d.message||'—') + '</div>';
+      grid.appendChild(el);
+    }
   }
 
   async function loadHealth() {
     try {
-      var res = await fetch('/summary');
+      var res  = await fetch('/summary');
       var data = await res.json();
-      document.getElementById('last').textContent =
-        'Last checked: ' + (data.generated_at || '(unknown)');
-      document.getElementById('raw').textContent = JSON.stringify(data, null, 2);
+      document.getElementById('last').textContent = 'Last checked: ' + (data.generated_at||'').replace('T',' ').substring(0,19) + ' UTC';
+      document.getElementById('raw').textContent  = JSON.stringify(data, null, 2);
       setBanner(data.overall_status || 'WARN');
-      var cards = document.getElementById('cards');
-      cards.innerHTML = '';
-      for (var i = 0; i < (data.services || []).length; i++) {
-        var s = data.services[i];
-        var latency = s.latency_ms != null ? s.latency_ms + ' ms' : '—';
-        var border = s.status === 'UP' ? '#D1FAE5'
-                   : s.status === 'DOWN' ? '#FEE2E2' : '#FEF3C7';
-        var el = document.createElement('div');
-        el.className = 'card';
-        el.style.borderColor = border;
-        var uiLink = s.ui_url
-          ? '<a class="ui-link" href="' + esc(s.ui_url) + '" target="_blank">Open UI ↗</a>'
-          : '';
-        el.innerHTML =
-          '<div class="card-header">' +
-            '<div class="card-name-row">' +
-              '<div class="card-name">' + esc(s.name) + '</div>' +
-              uiLink +
-            '</div>' +
-            '<span class="' + badgeClass(s.status) + '">' + esc(s.status) + '</span>' +
-          '</div>' +
-          '<div class="kv">' +
-            '<span class="kv-label">Type</span><span class="kv-val">' + esc(s.type||'—') + '</span>' +
-            '<span class="kv-label">Target</span><span class="kv-val">' + esc(s.target||'—') + '</span>' +
-            '<span class="kv-label">Latency</span><span class="kv-val">' + esc(latency) + '</span>' +
-            '<span class="kv-label">Message</span><span class="kv-val">' + esc(s.message||'—') + '</span>' +
-          '</div>';
-        cards.appendChild(el);
-      }
+      var svcs = data.services || [];
+      var disk = (data.system||{}).disk || [];
+      renderKpis(svcs, disk);
+      renderServices(svcs);
+      renderDisk(disk);
     } catch(e) {
       var banner = document.getElementById('banner');
       banner.className = 'banner banner-down';
@@ -424,20 +543,17 @@ def dashboard() -> str:  # pragma: no cover
     }
   }
 
-  // ── Report generation ──────────────────────────────────────────────────────
-
   function setReportUI(state) {
-    var btnGen  = document.getElementById('btn-generate');
-    var btnView = document.getElementById('btn-view');
-    var spinner = document.getElementById('report-spinner');
-    var progress= document.getElementById('report-progress');
-    var sub     = document.getElementById('report-sub');
-
+    var btnGen   = document.getElementById('btn-generate');
+    var btnView  = document.getElementById('btn-view');
+    var spinner  = document.getElementById('report-spinner');
+    var progress = document.getElementById('report-progress');
+    var sub      = document.getElementById('report-sub');
     if (state.status === 'running') {
       btnGen.disabled = true;
       spinner.style.display = 'inline-block';
       progress.style.display = 'inline';
-      progress.textContent = 'Generating… this takes 2–5 minutes';
+      progress.textContent = 'Generating\u2026 this takes 2\u20135 minutes';
       btnView.style.display = 'none';
     } else if (state.status === 'done') {
       btnGen.disabled = false;
@@ -446,17 +562,14 @@ def dashboard() -> str:  # pragma: no cover
       if (state.report_generated_at) {
         sub.textContent = 'Last generated: ' + new Date(state.report_generated_at).toLocaleString();
       }
-      if (state.report_exists) {
-        btnView.style.display = 'inline-flex';
-      }
+      if (state.report_exists) btnView.style.display = 'inline-flex';
     } else if (state.status === 'error') {
       btnGen.disabled = false;
       spinner.style.display = 'none';
       progress.style.display = 'inline';
-      progress.textContent = 'Error: ' + (state.message || 'unknown');
+      progress.textContent = 'Error: ' + (state.message||'unknown');
       progress.style.color = '#A32D2D';
     } else {
-      // idle
       btnGen.disabled = false;
       spinner.style.display = 'none';
       progress.style.display = 'none';
@@ -469,36 +582,25 @@ def dashboard() -> str:  # pragma: no cover
 
   async function pollReportStatus() {
     try {
-      var res = await fetch('/report/status');
+      var res   = await fetch('/report/status');
       var state = await res.json();
       setReportUI(state);
-      if (state.status === 'running') {
-        pollTimer = setTimeout(pollReportStatus, 2000);
-      } else {
-        pollTimer = null;
-      }
-    } catch(e) {
-      pollTimer = null;
-    }
+      pollTimer = state.status === 'running' ? setTimeout(pollReportStatus, 2000) : null;
+    } catch(e) { pollTimer = null; }
   }
 
   async function generateReport() {
     try {
       var res = await fetch('/report/generate', { method: 'POST' });
-      if (res.status === 409) {
-        return; // already running
-      }
+      if (res.status === 409) return;
       setReportUI({ status: 'running' });
       pollTimer = setTimeout(pollReportStatus, 2000);
-    } catch(e) {
-      console.error('Failed to start report generation:', e);
-    }
+    } catch(e) { console.error(e); }
   }
 
-  // ── Boot ───────────────────────────────────────────────────────────────────
   loadHealth();
   setInterval(loadHealth, 10000);
-  pollReportStatus(); // check initial state on load
+  pollReportStatus();
 </script>
 </body>
 </html>
