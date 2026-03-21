@@ -619,7 +619,7 @@ def projects_section_html(project_totals: Dict[str, Totals], grand: Totals) -> s
   <div style="font-size:11px;color:#9CA3AF;margin-bottom:10px;">All repositories</div>
   {_stats_table(table_rows, ["Project","Files","Blank","Comment","Code","Code %"])}
 </div>
-<script>
+<script data-tab="tab-proj">
 registerChartInit('tab-proj', function(){{
   new Chart(document.getElementById('proj-donut'),{{type:'doughnut',
     data:{{labels:{_jsl(dl)},datasets:[{{data:{_jsn(dv)},backgroundColor:{_jsl(dc)},borderWidth:0,hoverOffset:4}}]}},
@@ -627,7 +627,8 @@ registerChartInit('tab-proj', function(){{
       plugins:{{legend:{{display:false}},tooltip:{{callbacks:{{label:function(ctx){{
         var t=ctx.dataset.data.reduce(function(a,b){{return a+b;}},0);
         return ctx.label+': '+ctx.raw.toLocaleString()+' LOC ('+(ctx.raw/t*100).toFixed(1)+'%)';
-      }}}}}}}}}}}}
+      }}}}}}}}
+    }}
   }});
   new Chart(document.getElementById('proj-hbar'),{{type:'bar',
     data:{{labels:{_jsl(labels)},datasets:[{{data:{_jsn(values)},backgroundColor:{_jsl(colors)},borderWidth:0,borderRadius:4}}]}},
@@ -699,7 +700,8 @@ registerChartInit('tab-lang', function(){{
       plugins:{{legend:{{display:false}},tooltip:{{callbacks:{{label:function(ctx){{
         var t=ctx.dataset.data.reduce(function(a,b){{return a+b;}},0);
         return ctx.label+': '+ctx.raw.toLocaleString()+' LOC ('+(ctx.raw/t*100).toFixed(1)+'%)';
-      }}}}}}}}}}}}
+      }}}}}}}}
+    }}
   }});
   new Chart(document.getElementById('lang-hbar'),{{type:'bar',
     data:{{labels:{_jsl(bl)},datasets:[{{data:{_jsn(bv)},backgroundColor:{_jsl(bc)},borderWidth:0,borderRadius:4}}]}},
@@ -1074,6 +1076,11 @@ def build_report(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title}</title>
   {_CHARTJS}
+  <script id="chart-registry">
+  // Must be defined BEFORE tab HTML runs so registerChartInit calls succeed
+  var _chartInits = {{}};
+  function registerChartInit(tabId, fn) {{ _chartInits[tabId] = fn; }}
+  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap');
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -1146,12 +1153,6 @@ def build_report(
   </div>
 </div>
 <script>
-var _chartInits = {{}};
-
-function registerChartInit(tabId, fn) {{
-  _chartInits[tabId] = fn;
-}}
-
 function openTab(id, btn) {{
   document.querySelectorAll('.tab-panel').forEach(function(t) {{ t.classList.remove('active'); }});
   document.querySelectorAll('.tab-btn').forEach(function(b) {{ b.classList.remove('active'); }});

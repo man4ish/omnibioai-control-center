@@ -159,448 +159,268 @@ def dashboard() -> str:  # pragma: no cover
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>OmniBioAI Control Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'IBM Plex Sans', Arial, sans-serif;
-      background: #F1F5F9; color: #111827;
-      padding: 32px 28px 48px;
-    }
-    .wrap { max-width: 1320px; margin: 0 auto; }
-
-    /* ── Page header ── */
-    .page-header { margin-bottom: 6px; }
-    .page-title { font-size: 20px; font-weight: 700; color: #0F172A; }
-    .page-sub { font-size: 12px; color: #9CA3AF; margin-bottom: 24px; }
-
-    /* ── KPI strip ── */
-    .kpi-strip {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 12px; margin-bottom: 20px;
-    }
-    .kpi-card {
-      background: white; border: 1px solid #E5E7EB;
-      border-radius: 12px; padding: 16px 18px 14px;
-      position: relative; overflow: hidden;
-    }
-    .kpi-card::before {
-      content: ''; position: absolute;
-      top: 0; left: 0; right: 0; height: 3px;
-      border-radius: 12px 12px 0 0;
-    }
-    .kpi-card.c-gray::before  { background: #D1D5DB; }
-    .kpi-card.c-green::before { background: #639922; }
-    .kpi-card.c-red::before   { background: #E24B4A; }
-    .kpi-card.c-amber::before { background: #BA7517; }
-    .kpi-card.c-blue::before  { background: #378ADD; }
-    .kpi-label { font-size: 11px; color: #9CA3AF; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-    .kpi-value { font-size: 26px; font-weight: 700; color: #0F172A; line-height: 1; margin-bottom: 4px; }
-    .kpi-sub   { font-size: 11px; color: #9CA3AF; }
-
-    /* ── Report panel ── */
-    .report-panel {
-      background: white; border: 1px solid #E5E7EB;
-      border-radius: 12px; padding: 18px 20px;
-      margin-bottom: 16px;
-      display: flex; align-items: center;
-      justify-content: space-between; flex-wrap: wrap; gap: 14px;
-    }
-    .report-left { display: flex; align-items: center; gap: 14px; }
-    .report-icon {
-      width: 38px; height: 38px; border-radius: 10px;
-      background: #F1F5F9; border: 1px solid #E5E7EB;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
-    }
-    .report-title { font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 3px; }
-    .report-sub   { font-size: 11px; color: #9CA3AF; }
-    .report-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid #E5E7EB; border-top-color: #374151;
-      border-radius: 50%; animation: spin .8s linear infinite;
-      display: inline-block; flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .progress-msg { font-size: 11px; color: #6B7280; }
-
-    /* ── Buttons ── */
-    .btn {
-      border: 1px solid #E5E7EB; border-radius: 8px;
-      padding: 8px 16px; background: white; cursor: pointer;
-      font-size: 13px; font-weight: 600; color: #374151;
-      font-family: inherit; text-decoration: none;
-      display: inline-flex; align-items: center; gap: 6px;
-      transition: background .12s;
-    }
-    .btn:hover { background: #F8FAFC; }
-    .btn-dark { background: #0F172A; color: white; border-color: #0F172A; }
-    .btn-dark:hover { background: #1E293B; }
-    .btn-dark:disabled { background: #94A3B8; border-color: #94A3B8; cursor: not-allowed; }
-    .btn-green { background: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
-    .btn-green:hover { background: #D1FAE5; }
-
-    /* ── Banner ── */
-    .banner {
-      border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
-      display: flex; align-items: center; gap: 12px;
-      border: 1px solid transparent;
-    }
-    .banner-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .banner-title { font-size: 14px; font-weight: 600; }
-    .banner-sub   { font-size: 11px; margin-top: 2px; }
-    .banner-up   { background: #ECFDF5; border-color: #6EE7B733; }
-    .banner-down { background: #FEF2F2; border-color: #FCA5A533; }
-    .banner-warn { background: #FFFBEB; border-color: #FCD34D33; }
-
-    /* ── Top bar ── */
-    .topbar {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 16px; flex-wrap: wrap;
-    }
-    .section-label {
-      font-size: 11px; font-weight: 600; color: #9CA3AF;
-      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px;
-    }
-    .last-checked { font-size: 12px; color: #9CA3AF; margin-left: auto; }
-
-    /* ── Service grid ── */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 12px; margin-bottom: 24px;
-    }
-    .card {
-      background: white; border-radius: 12px;
-      padding: 16px; border: 1px solid #E5E7EB;
-      transition: box-shadow .15s;
-    }
-    .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .card-header {
-      display: flex; justify-content: space-between;
-      align-items: flex-start; margin-bottom: 12px;
-    }
-    .card-name-row { display: flex; align-items: center; gap: 8px; }
-    .card-name { font-size: 13px; font-weight: 600; color: #111827; }
-    .badge {
-      padding: 3px 10px; border-radius: 99px;
-      font-size: 11px; font-weight: 600;
-    }
-    .badge-up   { background: #EAF3DE; color: #3B6D11; }
-    .badge-down { background: #FCEBEB; color: #A32D2D; }
-    .badge-warn { background: #FAEEDA; color: #854F0B; }
-    .ui-link {
-      font-size: 11px; color: #378ADD; text-decoration: none;
-      font-weight: 600; padding: 2px 8px;
-      border: 1px solid #B5D4F4; border-radius: 6px;
-      background: #E6F1FB; white-space: nowrap;
-    }
-    .ui-link:hover { background: #B5D4F4; }
-    .kv {
-      display: grid; grid-template-columns: 72px 1fr;
-      gap: 4px 8px; font-size: 11px;
-    }
-    .kv-k { color: #9CA3AF; }
-    .kv-v { color: #374151; word-break: break-all; }
-
-    /* ── Disk section ── */
-    .disk-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px; margin-bottom: 24px;
-    }
-    .disk-card {
-      background: white; border-radius: 12px;
-      padding: 14px 16px; border: 1px solid #E5E7EB;
-    }
-    .disk-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 8px;
-    }
-    .disk-name { font-size: 12px; font-weight: 600; color: #111827; }
-    .disk-path { font-size: 11px; color: #9CA3AF; margin-bottom: 6px; }
-    .disk-bar-track {
-      height: 5px; background: #E5E7EB;
-      border-radius: 99px; overflow: hidden; margin-bottom: 5px;
-    }
-    .disk-bar-fill { height: 100%; border-radius: 99px; }
-    .disk-msg { font-size: 11px; color: #6B7280; }
-
-    /* ── Raw JSON ── */
-    .raw-toggle {
-      font-size: 12px; color: #9CA3AF; cursor: pointer;
-      background: none; border: none; padding: 0;
-      text-decoration: underline; margin-bottom: 8px;
-      font-family: inherit;
-    }
-    pre {
-      background: #F8FAFC; border: 1px solid #E5E7EB;
-      border-radius: 10px; padding: 14px;
-      overflow: auto; font-size: 11px; color: #374151;
-      display: none; line-height: 1.6;
-    }
-
-    /* ── Footer ── */
-    .footer {
-      margin-top: 32px; padding-top: 16px;
-      border-top: 1px solid #E5E7EB;
-      font-size: 11px; color: #9CA3AF; line-height: 1.8;
-    }
+    body { font-family: 'Inter','Segoe UI',system-ui,Arial,sans-serif; background:#f9fafb; color:#111827; min-height:100vh; display:flex; flex-direction:column; }
+    a { text-decoration:none; color:inherit; }
+    .site-header { display:flex; align-items:center; justify-content:space-between; padding:10px 28px; background:white; box-shadow:0 2px 8px rgba(0,0,0,.1); gap:12px; flex-shrink:0; }
+    .logo { display:flex; align-items:center; gap:10px; }
+    .logo-text { font-size:18px; font-weight:700; color:#2563eb; letter-spacing:-.01em; }
+    .logo-text span { font-weight:400; }
+    .logo-sub { font-size:11px; color:#9ca3af; margin-top:1px; }
+    .header-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .status-chip { font-size:12px; font-weight:600; padding:5px 13px; border-radius:99px; display:inline-flex; align-items:center; gap:6px; }
+    .chip-green { background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; }
+    .chip-red   { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+    .chip-amber { background:#fffbeb; color:#d97706; border:1px solid #fde68a; }
+    .chip-dot { width:7px; height:7px; border-radius:50%; }
+    .dot-green { background:#10b981; } .dot-red { background:#ef4444; } .dot-amber { background:#f59e0b; }
+    .btn { font-size:13px; font-weight:600; padding:7px 15px; border-radius:8px; cursor:pointer; border:1px solid; display:inline-flex; align-items:center; gap:6px; font-family:inherit; text-decoration:none; transition:opacity .12s; }
+    .btn:hover { opacity:.88; }
+    .btn-outline { background:white; border-color:#d1d5db; color:#374151; }
+    .btn-primary { background:#2563eb; border-color:#2563eb; color:white; }
+    .btn-primary:disabled { background:#93c5fd; border-color:#93c5fd; cursor:not-allowed; }
+    .btn-light { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
+    .btn-sm { font-size:12px; padding:5px 12px; }
+    .omni-wrap { max-width:1280px; margin:0 auto; padding:24px 28px 48px; width:100%; flex:1; }
+    .omni-hero { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid #e5e7eb; }
+    .omni-title { font-size:22px; font-weight:700; color:#111827; margin-bottom:4px; }
+    .omni-sub { font-size:13px; color:#6b7280; margin-bottom:10px; }
+    .omni-meta { display:flex; gap:8px; flex-wrap:wrap; }
+    .meta-pill { font-size:11px; font-weight:600; padding:3px 10px; border-radius:99px; background:#f3f4f6; color:#6b7280; border:1px solid #e5e7eb; }
+    .meta-pill.blue { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .omni-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; padding-top:4px; }
+    .kpi-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px; }
+    .kpi-card { background:white; border:1px solid #e5e7eb; border-radius:10px; padding:16px 18px; position:relative; overflow:hidden; }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .kpi-gray::before  { background:#d1d5db; } .kpi-green::before { background:#10b981; }
+    .kpi-red::before   { background:#ef4444; } .kpi-amber::before { background:#f59e0b; }
+    .kpi-blue::before  { background:#2563eb; }
+    .kpi-label { font-size:10px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:.07em; margin-bottom:8px; }
+    .kpi-val { font-size:28px; font-weight:700; color:#111827; line-height:1; margin-bottom:3px; }
+    .kpi-val.g { color:#059669; } .kpi-val.r { color:#dc2626; }
+    .kpi-sub { font-size:11px; color:#9ca3af; }
+    .omni-card { background:white; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:16px; overflow:hidden; }
+    .omni-card-h { padding:11px 18px; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; justify-content:space-between; background:#fafafa; }
+    .omni-card-t { font-size:13px; font-weight:700; color:#111827; }
+    .omni-card-b { padding:16px 18px; }
+    .report-row { display:flex; align-items:center; gap:14px; }
+    .report-icon { width:40px; height:40px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .report-title { font-size:13px; font-weight:700; color:#111827; margin-bottom:2px; }
+    .report-meta { font-size:11px; color:#9ca3af; }
+    .spinner { width:14px; height:14px; border:2px solid #e5e7eb; border-top-color:#2563eb; border-radius:50%; animation:spin .8s linear infinite; display:inline-block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .progress-msg { font-size:11px; color:#6b7280; }
+    .progress-msg.err { color:#dc2626; }
+    .svc-table { width:100%; border-collapse:collapse; }
+    .svc-table th { font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.07em; padding:9px 14px; border-bottom:1px solid #f3f4f6; text-align:left; background:#fafafa; white-space:nowrap; }
+    .svc-table td { font-size:12px; color:#374151; padding:10px 14px; border-bottom:1px solid #f9fafb; vertical-align:middle; }
+    .svc-table tr:last-child td { border-bottom:none; }
+    .svc-table tr:hover td { background:#fafafa; }
+    .svc-name { font-weight:700; color:#111827; font-size:13px; white-space:nowrap; }
+    .badge { font-size:10px; font-weight:700; padding:3px 9px; border-radius:99px; white-space:nowrap; }
+    .badge-up { background:#dcfce7; color:#15803d; } .badge-dn { background:#fee2e2; color:#b91c1c; } .badge-wn { background:#fef3c7; color:#92400e; }
+    .type-pill { font-size:10px; color:#6b7280; background:#f9fafb; border:1px solid #f3f4f6; border-radius:5px; padding:2px 7px; white-space:nowrap; }
+    .latency { font-family:'IBM Plex Mono',monospace; font-size:11px; color:#374151; white-space:nowrap; }
+    .lat-fast { color:#059669; font-weight:600; }
+    .ui-link { font-size:11px; font-weight:600; color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:3px 9px; white-space:nowrap; text-decoration:none; }
+    .ui-link:hover { background:#dbeafe; }
+    .target-cell { font-size:11px; color:#9ca3af; font-family:monospace; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .msg-cell { font-size:11px; color:#6b7280; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .disk-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .disk-item { background:#fafafa; border:1px solid #f3f4f6; border-radius:8px; padding:12px 14px; border-left-width:3px; }
+    .disk-ok { border-left-color:#10b981; } .disk-warn { border-left-color:#f59e0b; } .disk-down { border-left-color:#ef4444; }
+    .disk-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+    .disk-name { font-size:12px; font-weight:700; color:#111827; }
+    .disk-path { font-size:10px; color:#9ca3af; margin-bottom:7px; }
+    .track { height:5px; background:#e5e7eb; border-radius:99px; overflow:hidden; margin-bottom:4px; }
+    .fill { height:100%; border-radius:99px; }
+    .fill-ok { background:#10b981; } .fill-warn { background:#f59e0b; } .fill-down { background:#ef4444; }
+    .raw-toggle { font-size:12px; color:#9ca3af; cursor:pointer; background:none; border:none; font-family:inherit; text-decoration:underline; padding:0; }
+    pre { background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:14px; overflow:auto; font-size:11px; color:#374151; display:none; line-height:1.6; margin-top:8px; }
+    footer { text-align:center; padding:20px; font-size:11px; color:#9ca3af; border-top:1px solid #f3f4f6; margin-top:auto; }
   </style>
 </head>
 <body>
-<div class="wrap">
 
-  <div class="page-header">
-    <div class="page-title">OmniBioAI Control Center</div>
+<header class="site-header">
+  <div class="logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 34" width="36" height="36">
+      <polygon points="16,2 28,8 28,22 16,28 4,22 4,8" fill="none" stroke="#2563eb" stroke-width="1.8"/>
+      <path d="M11 9 C16 13,14 17,20 20 M20 9 C15 13,17 17,11 20" stroke="#2563eb" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <circle cx="16" cy="15" r="2.2" fill="#2563eb"/>
+    </svg>
+    <div>
+      <div class="logo-text">Omni<span>BioAI</span></div>
+      <div class="logo-sub">Control Center v0.1.0</div>
+    </div>
   </div>
-  <div class="page-sub">Stateless health dashboard &middot; auto-refreshes every 10 s</div>
-
-  <!-- KPI strip -->
-  <div class="kpi-strip" id="kpi-strip">
-    <div class="kpi-card c-gray"><div class="kpi-label">Services</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-sub">monitored</div></div>
-    <div class="kpi-card c-green"><div class="kpi-label">Healthy</div><div class="kpi-value" id="kpi-up">—</div><div class="kpi-sub">UP</div></div>
-    <div class="kpi-card c-red"><div class="kpi-label">Down</div><div class="kpi-value" id="kpi-down">—</div><div class="kpi-sub">need attention</div></div>
-    <div class="kpi-card c-amber"><div class="kpi-label">Degraded</div><div class="kpi-value" id="kpi-warn">—</div><div class="kpi-sub">WARN</div></div>
-    <div class="kpi-card c-blue"><div class="kpi-label">Disk warnings</div><div class="kpi-value" id="kpi-disk">—</div><div class="kpi-sub">paths checked</div></div>
+  <div class="header-right">
+    <div class="status-chip chip-green" id="header-status">
+      <div class="chip-dot dot-green" id="header-dot"></div>
+      <span id="header-status-text">Checking&hellip;</span>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="loadHealth()">&#8635; Refresh</button>
+    <button class="btn btn-primary btn-sm" id="btn-generate-hdr" onclick="generateReport()">Generate Report</button>
+    <a class="btn btn-light btn-sm" id="btn-view-hdr" href="/report" target="_blank" style="display:none;">View Report &#8599;</a>
   </div>
+</header>
 
-  <!-- Report panel -->
-  <div class="report-panel">
-    <div class="report-left">
-      <div class="report-icon">&#128196;</div>
-      <div>
-        <div class="report-title">Ecosystem Report</div>
-        <div class="report-sub" id="report-sub">Architecture &middot; Projects &middot; Languages &middot; Coverage &middot; Health</div>
+<div class="omni-wrap">
+  <div class="omni-hero">
+    <div>
+      <div class="omni-title">Health Dashboard</div>
+      <div class="omni-sub">OmniBioAI Ecosystem &middot; Stateless health monitoring</div>
+      <div class="omni-meta">
+        <span class="meta-pill blue">v0.1.0</span>
+        <span class="meta-pill">auto-refreshes every 10 s</span>
+        <span class="meta-pill" id="meta-checked">Last checked: &mdash;</span>
       </div>
     </div>
-    <div class="report-actions">
-      <span id="report-spinner" style="display:none;" class="spinner"></span>
-      <span id="report-progress" class="progress-msg" style="display:none;"></span>
-      <button class="btn btn-dark" id="btn-generate" onclick="generateReport()">Generate Report</button>
-      <a class="btn btn-green" id="btn-view" href="/report" target="_blank" style="display:none;">View Report ↗</a>
+    <div class="omni-actions">
+      <button class="btn btn-outline btn-sm" onclick="loadHealth()">&#8635; Refresh</button>
     </div>
   </div>
 
-  <!-- Health banner -->
-  <div id="banner" class="banner" style="display:none;"></div>
-
-  <!-- Top bar -->
-  <div class="topbar">
-    <button class="btn" onclick="loadHealth()">&#8635; Refresh</button>
-    <span class="last-checked" id="last"></span>
+  <div class="kpi-strip">
+    <div class="kpi-card kpi-gray"><div class="kpi-label">Services</div><div class="kpi-val" id="kpi-total">&mdash;</div><div class="kpi-sub">monitored</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">Healthy</div><div class="kpi-val g" id="kpi-up">&mdash;</div><div class="kpi-sub">UP</div></div>
+    <div class="kpi-card kpi-red"><div class="kpi-label">Down</div><div class="kpi-val" id="kpi-down">&mdash;</div><div class="kpi-sub">need attention</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-label">Degraded</div><div class="kpi-val" id="kpi-warn">&mdash;</div><div class="kpi-sub">WARN</div></div>
+    <div class="kpi-card kpi-blue"><div class="kpi-label">Disk warnings</div><div class="kpi-val" id="kpi-disk">&mdash;</div><div class="kpi-sub">paths checked</div></div>
   </div>
 
-  <div class="section-label">Services</div>
-  <div class="grid" id="cards"></div>
+  <div class="omni-card">
+    <div class="omni-card-h">
+      <span class="omni-card-t">Ecosystem Report</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="rpt-spinner" class="spinner" style="display:none;"></span>
+        <span id="rpt-progress" class="progress-msg" style="display:none;"></span>
+        <button class="btn btn-primary btn-sm" id="btn-generate" onclick="generateReport()">Generate Report</button>
+        <a class="btn btn-light btn-sm" id="btn-view" href="/report" target="_blank" style="display:none;">View Report &#8599;</a>
+      </div>
+    </div>
+    <div class="omni-card-b" style="padding:14px 18px;">
+      <div class="report-row">
+        <div class="report-icon">&#128196;</div>
+        <div>
+          <div class="report-title">omnibioai_ecosystem_report.html</div>
+          <div class="report-meta" id="report-meta">Architecture &middot; Projects &middot; Languages &middot; Coverage &middot; Health</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <div class="section-label" id="disk-label" style="display:none;">Disk checks</div>
-  <div class="disk-grid" id="disk-cards"></div>
+  <div class="omni-card">
+    <div class="omni-card-h">
+      <span class="omni-card-t">Services</span>
+      <span class="meta-pill" id="last-checked-pill">Last checked: &mdash;</span>
+    </div>
+    <div class="omni-card-b" style="padding:0;">
+      <table class="svc-table">
+        <thead><tr><th>Service</th><th>Type</th><th>Target</th><th>Latency</th><th>Message</th><th>Status</th><th>UI</th></tr></thead>
+        <tbody id="svc-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:#9ca3af;font-size:12px;">Loading&hellip;</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="omni-card" id="disk-card" style="display:none;">
+    <div class="omni-card-h"><span class="omni-card-t">Disk Checks</span></div>
+    <div class="omni-card-b"><div class="disk-grid" id="disk-grid"></div></div>
+  </div>
 
   <button class="raw-toggle" onclick="toggleRaw()">Show raw JSON</button>
   <pre id="raw"></pre>
-
-  <div class="footer">
-    Health checks run on every refresh and auto-refresh every 10 s.<br>
-    Disk thresholds and service endpoints are configured in <code>control_center.yaml</code>.
-  </div>
-
 </div>
+
+<footer>&copy; 2025 Manish Kumar &middot; OmniBioAI Platform</footer>
+
 <script>
-  var rawVisible = false;
-  var pollTimer = null;
-
-  function toggleRaw() {
-    rawVisible = !rawVisible;
-    document.getElementById('raw').style.display = rawVisible ? 'block' : 'none';
-    document.querySelector('.raw-toggle').textContent = rawVisible ? 'Hide raw JSON' : 'Show raw JSON';
+  var rawVisible=false,pollTimer=null;
+  function toggleRaw(){rawVisible=!rawVisible;document.getElementById('raw').style.display=rawVisible?'block':'none';document.querySelector('.raw-toggle').textContent=rawVisible?'Hide raw JSON':'Show raw JSON';}
+  function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+  function badgeHtml(st){var c=st==='UP'?'badge-up':st==='WARN'?'badge-wn':'badge-dn';return '<span class="badge '+c+'">'+esc(st)+'</span>';}
+  function setHeaderStatus(overall){
+    var h=document.getElementById('header-status'),d=document.getElementById('header-dot'),t=document.getElementById('header-status-text');
+    if(overall==='UP'){h.className='status-chip chip-green';d.className='chip-dot dot-green';t.textContent='All systems operational';}
+    else if(overall==='DOWN'){h.className='status-chip chip-red';d.className='chip-dot dot-red';t.textContent='One or more services down';}
+    else{h.className='status-chip chip-amber';d.className='chip-dot dot-amber';t.textContent='Services degraded';}
   }
-
-  function esc(s) {
-    return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+  function renderKpis(s,d){
+    var up=s.filter(function(x){return x.status==='UP';}).length;
+    var dn=s.filter(function(x){return x.status==='DOWN';}).length;
+    var wn=s.filter(function(x){return x.status==='WARN';}).length;
+    var dw=(d||[]).filter(function(x){return x.status!=='UP';}).length;
+    document.getElementById('kpi-total').textContent=s.length;
+    document.getElementById('kpi-up').textContent=up;
+    document.getElementById('kpi-down').textContent=dn;
+    document.getElementById('kpi-warn').textContent=wn;
+    document.getElementById('kpi-disk').textContent=dw;
   }
-
-  function badgeClass(status) {
-    if (status === 'UP')   return 'badge badge-up';
-    if (status === 'WARN') return 'badge badge-warn';
-    return 'badge badge-down';
+  function renderServices(services){
+    var tb=document.getElementById('svc-tbody');
+    if(!services.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#9ca3af;font-size:12px;">No services configured</td></tr>';return;}
+    var rows='';
+    for(var i=0;i<services.length;i++){
+      var s=services[i];
+      var lat=s.latency_ms!=null?'<span class="latency'+(s.latency_ms<10?' lat-fast':'')+'">'+s.latency_ms+' ms</span>':'<span class="latency" style="color:#d1d5db;">&mdash;</span>';
+      var ui=s.ui_url?'<a class="ui-link" href="'+esc(s.ui_url)+'" target="_blank">Open UI &#8599;</a>':'<span style="color:#d1d5db;font-size:11px;">&mdash;</span>';
+      rows+='<tr><td class="svc-name">'+esc(s.name)+'</td><td><span class="type-pill">'+esc(s.type||'—')+'</span></td><td class="target-cell">'+esc(s.target||'—')+'</td><td>'+lat+'</td><td class="msg-cell">'+esc(s.message||'—')+'</td><td>'+badgeHtml(s.status)+'</td><td>'+ui+'</td></tr>';
+    }
+    tb.innerHTML=rows;
   }
-
-  function cardBorder(status) {
-    if (status === 'UP')   return '#D1FAE5';
-    if (status === 'DOWN') return '#FEE2E2';
-    return '#FEF3C7';
+  function renderDisk(disk){
+    var card=document.getElementById('disk-card'),grid=document.getElementById('disk-grid');
+    if(!disk||!disk.length){card.style.display='none';return;}
+    card.style.display='block';
+    var html='';
+    for(var i=0;i<disk.length;i++){
+      var d=disk[i],m=d.message?d.message.match(/([0-9.]+)%/):null,pct=m?parseFloat(m[1]):null;
+      var cls=d.status==='UP'?'disk-ok':d.status==='WARN'?'disk-warn':'disk-down';
+      var fcls=d.status==='UP'?'fill-ok':d.status==='WARN'?'fill-warn':'fill-down';
+      var pcss=d.status==='UP'?'color:#059669':d.status==='WARN'?'color:#d97706':'color:#dc2626';
+      var bar=pct!==null?'<div class="track"><div class="fill '+fcls+'" style="width:'+pct.toFixed(1)+'%"></div></div>':'';
+      html+='<div class="disk-item '+cls+'"><div class="disk-hdr"><div class="disk-name">'+esc(d.name.replace('disk:',''))+'</div><div style="font-size:12px;font-weight:700;'+pcss+'">'+esc(d.message||'')+'</div></div><div class="disk-path">'+esc(d.target||'')+'</div>'+bar+'</div>';
+    }
+    grid.innerHTML=html;
   }
-
-  function setBanner(overall) {
-    var el = document.getElementById('banner');
-    var cfg = {
-      'UP':   ['banner-up',   '#10B981', 'All systems operational',        'Overall: UP'],
-      'DOWN': ['banner-down', '#EF4444', 'One or more services are down',  'Overall: DOWN'],
-      'WARN': ['banner-warn', '#F59E0B', 'One or more services need attention', 'Overall: WARN'],
-    }[overall] || ['banner-warn', '#F59E0B', overall, ''];
-    el.className = 'banner ' + cfg[0];
-    el.style.display = 'flex';
-    el.innerHTML =
-      '<div class="banner-dot" style="background:' + cfg[1] + '"></div>' +
-      '<div><div class="banner-title">' + esc(cfg[2]) + '</div>' +
-      '<div class="banner-sub" style="color:' + cfg[1] + '">' + esc(cfg[3]) + '</div></div>';
-  }
-
-  function renderKpis(services, disk) {
-    var up   = services.filter(function(s){ return s.status==='UP'; }).length;
-    var down = services.filter(function(s){ return s.status==='DOWN'; }).length;
-    var warn = services.filter(function(s){ return s.status==='WARN'; }).length;
-    var dw   = (disk||[]).filter(function(d){ return d.status!=='UP'; }).length;
-    document.getElementById('kpi-total').textContent = services.length;
-    document.getElementById('kpi-up').textContent    = up;
-    document.getElementById('kpi-down').textContent  = down;
-    document.getElementById('kpi-warn').textContent  = warn;
-    document.getElementById('kpi-disk').textContent  = dw;
-  }
-
-  function renderServices(services) {
-    var cards = document.getElementById('cards');
-    cards.innerHTML = '';
-    for (var i = 0; i < services.length; i++) {
-      var s = services[i];
-      var latency = s.latency_ms != null ? s.latency_ms + ' ms' : '—';
-      var uiLink = s.ui_url
-        ? '<a class="ui-link" href="' + esc(s.ui_url) + '" target="_blank">Open UI ↗</a>'
-        : '';
-      var el = document.createElement('div');
-      el.className = 'card';
-      el.style.borderColor = cardBorder(s.status);
-      el.innerHTML =
-        '<div class="card-header">' +
-          '<div class="card-name-row">' +
-            '<div class="card-name">' + esc(s.name) + '</div>' + uiLink +
-          '</div>' +
-          '<span class="' + badgeClass(s.status) + '">' + esc(s.status) + '</span>' +
-        '</div>' +
-        '<div class="kv">' +
-          '<span class="kv-k">Type</span><span class="kv-v">' + esc(s.type||'—') + '</span>' +
-          '<span class="kv-k">Target</span><span class="kv-v">' + esc(s.target||'—') + '</span>' +
-          '<span class="kv-k">Latency</span><span class="kv-v">' + esc(latency) + '</span>' +
-          '<span class="kv-k">Message</span><span class="kv-v">' + esc(s.message||'—') + '</span>' +
-        '</div>';
-      cards.appendChild(el);
+  async function loadHealth(){
+    try{
+      var res=await fetch('/summary'),data=await res.json();
+      var ts=(data.generated_at||'').replace('T',' ').substring(0,19)+' UTC';
+      document.getElementById('meta-checked').textContent='Last checked: '+ts;
+      document.getElementById('last-checked-pill').textContent='Last checked: '+ts;
+      document.getElementById('raw').textContent=JSON.stringify(data,null,2);
+      setHeaderStatus(data.overall_status||'WARN');
+      var svcs=data.services||[],disk=(data.system||{}).disk||[];
+      renderKpis(svcs,disk);renderServices(svcs);renderDisk(disk);
+    }catch(e){
+      setHeaderStatus('DOWN');
+      document.getElementById('svc-tbody').innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#dc2626;font-size:12px;">Could not reach /summary: '+esc(String(e))+'</td></tr>';
     }
   }
-
-  function renderDisk(disk) {
-    var label = document.getElementById('disk-label');
-    var grid  = document.getElementById('disk-cards');
-    if (!disk || !disk.length) { label.style.display = 'none'; grid.innerHTML = ''; return; }
-    label.style.display = 'block';
-    grid.innerHTML = '';
-    for (var i = 0; i < disk.length; i++) {
-      var d = disk[i];
-      var pctMatch = d.message ? d.message.match(/([0-9.]+)%/) : null;
-      var pct = pctMatch ? parseFloat(pctMatch[1]) : null;
-      var fillColor = d.status === 'UP' ? '#639922' : d.status === 'WARN' ? '#BA7517' : '#E24B4A';
-      var border = d.status === 'UP' ? '#D1FAE5' : d.status === 'WARN' ? '#FEF3C7' : '#FEE2E2';
-      var barHtml = pct !== null
-        ? '<div class="disk-bar-track"><div class="disk-bar-fill" style="width:' + pct.toFixed(1) + '%;background:' + fillColor + ';"></div></div>'
-        : '';
-      var el = document.createElement('div');
-      el.className = 'disk-card';
-      el.style.borderColor = border;
-      el.innerHTML =
-        '<div class="disk-header">' +
-          '<div class="disk-name">' + esc(d.name.replace('disk:','')) + '</div>' +
-          '<span class="' + badgeClass(d.status) + '">' + esc(d.status) + '</span>' +
-        '</div>' +
-        '<div class="disk-path">' + esc(d.target||'') + '</div>' +
-        barHtml +
-        '<div class="disk-msg">' + esc(d.message||'—') + '</div>';
-      grid.appendChild(el);
+  function setReportUI(state){
+    var bg=document.getElementById('btn-generate'),bgh=document.getElementById('btn-generate-hdr');
+    var bv=document.getElementById('btn-view'),bvh=document.getElementById('btn-view-hdr');
+    var sp=document.getElementById('rpt-spinner'),pg=document.getElementById('rpt-progress');
+    var mt=document.getElementById('report-meta');
+    if(state.status==='running'){
+      bg.disabled=true;bgh.disabled=true;sp.style.display='inline-block';pg.style.display='inline';pg.className='progress-msg';pg.textContent='Generating\u2026 this takes 2\u20135 minutes';bv.style.display='none';bvh.style.display='none';
+    }else if(state.status==='done'){
+      bg.disabled=false;bgh.disabled=false;sp.style.display='none';pg.style.display='none';
+      if(state.report_generated_at)mt.textContent='Last generated: '+new Date(state.report_generated_at).toLocaleString()+' \u00b7 Architecture \u00b7 Projects \u00b7 Languages \u00b7 Coverage \u00b7 Health';
+      if(state.report_exists){bv.style.display='inline-flex';bvh.style.display='inline-flex';}
+    }else if(state.status==='error'){
+      bg.disabled=false;bgh.disabled=false;sp.style.display='none';pg.style.display='inline';pg.className='progress-msg err';pg.textContent='Error: '+(state.message||'unknown');
+    }else{
+      bg.disabled=false;bgh.disabled=false;sp.style.display='none';pg.style.display='none';
+      if(state.report_exists&&state.report_generated_at){mt.textContent='Last generated: '+new Date(state.report_generated_at).toLocaleString()+' \u00b7 Architecture \u00b7 Projects \u00b7 Languages \u00b7 Coverage \u00b7 Health';bv.style.display='inline-flex';bvh.style.display='inline-flex';}
     }
   }
-
-  async function loadHealth() {
-    try {
-      var res  = await fetch('/summary');
-      var data = await res.json();
-      document.getElementById('last').textContent = 'Last checked: ' + (data.generated_at||'').replace('T',' ').substring(0,19) + ' UTC';
-      document.getElementById('raw').textContent  = JSON.stringify(data, null, 2);
-      setBanner(data.overall_status || 'WARN');
-      var svcs = data.services || [];
-      var disk = (data.system||{}).disk || [];
-      renderKpis(svcs, disk);
-      renderServices(svcs);
-      renderDisk(disk);
-    } catch(e) {
-      var banner = document.getElementById('banner');
-      banner.className = 'banner banner-down';
-      banner.style.display = 'flex';
-      banner.innerHTML =
-        '<div class="banner-dot" style="background:#EF4444"></div>' +
-        '<div><div class="banner-title">Could not reach /summary</div>' +
-        '<div class="banner-sub" style="color:#EF4444">' + esc(String(e)) + '</div></div>';
-    }
-  }
-
-  function setReportUI(state) {
-    var btnGen   = document.getElementById('btn-generate');
-    var btnView  = document.getElementById('btn-view');
-    var spinner  = document.getElementById('report-spinner');
-    var progress = document.getElementById('report-progress');
-    var sub      = document.getElementById('report-sub');
-    if (state.status === 'running') {
-      btnGen.disabled = true;
-      spinner.style.display = 'inline-block';
-      progress.style.display = 'inline';
-      progress.textContent = 'Generating\u2026 this takes 2\u20135 minutes';
-      btnView.style.display = 'none';
-    } else if (state.status === 'done') {
-      btnGen.disabled = false;
-      spinner.style.display = 'none';
-      progress.style.display = 'none';
-      if (state.report_generated_at) {
-        sub.textContent = 'Last generated: ' + new Date(state.report_generated_at).toLocaleString();
-      }
-      if (state.report_exists) btnView.style.display = 'inline-flex';
-    } else if (state.status === 'error') {
-      btnGen.disabled = false;
-      spinner.style.display = 'none';
-      progress.style.display = 'inline';
-      progress.textContent = 'Error: ' + (state.message||'unknown');
-      progress.style.color = '#A32D2D';
-    } else {
-      btnGen.disabled = false;
-      spinner.style.display = 'none';
-      progress.style.display = 'none';
-      if (state.report_exists && state.report_generated_at) {
-        sub.textContent = 'Last generated: ' + new Date(state.report_generated_at).toLocaleString();
-        btnView.style.display = 'inline-flex';
-      }
-    }
-  }
-
-  async function pollReportStatus() {
-    try {
-      var res   = await fetch('/report/status');
-      var state = await res.json();
-      setReportUI(state);
-      pollTimer = state.status === 'running' ? setTimeout(pollReportStatus, 2000) : null;
-    } catch(e) { pollTimer = null; }
-  }
-
-  async function generateReport() {
-    try {
-      var res = await fetch('/report/generate', { method: 'POST' });
-      if (res.status === 409) return;
-      setReportUI({ status: 'running' });
-      pollTimer = setTimeout(pollReportStatus, 2000);
-    } catch(e) { console.error(e); }
-  }
-
-  loadHealth();
-  setInterval(loadHealth, 10000);
-  pollReportStatus();
+  async function pollReportStatus(){try{var res=await fetch('/report/status'),state=await res.json();setReportUI(state);pollTimer=state.status==='running'?setTimeout(pollReportStatus,2000):null;}catch(e){pollTimer=null;}}
+  async function generateReport(){try{var res=await fetch('/report/generate',{method:'POST'});if(res.status===409)return;setReportUI({status:'running'});pollTimer=setTimeout(pollReportStatus,2000);}catch(e){console.error(e);}}
+  loadHealth();setInterval(loadHealth,10000);pollReportStatus();
 </script>
 </body>
 </html>
