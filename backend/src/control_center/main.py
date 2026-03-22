@@ -145,7 +145,7 @@ def report_status() -> JSONResponse:
 
 
 @app.get("/", response_class=HTMLResponse)
-def root() -> HTMLResponse:  # pragma: no cover
+def root() -> HTMLResponse:
     """
     Main entry point — serves the generated report HTML with an injected
     sticky control bar (Regenerate + View Dashboard buttons).
@@ -354,7 +354,7 @@ def root() -> HTMLResponse:  # pragma: no cover
 """)
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard() -> str:  # pragma: no cover
+def dashboard() -> str:
     """
     Live health dashboard with:
     - Overall status banner

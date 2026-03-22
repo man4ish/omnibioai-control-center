@@ -281,7 +281,7 @@ class TestRoutesReport(unittest.TestCase):
         os.environ["WORKSPACE_ROOT"] = "/nonexistent/workspace"
         try:
             response = client.get("/report")
-            self.assertIn("not yet generated", response.text)
+            self.assertIn("No ecosystem report found", response.text)
         finally:
             del os.environ["WORKSPACE_ROOT"]
 
@@ -289,7 +289,7 @@ class TestRoutesReport(unittest.TestCase):
         os.environ["WORKSPACE_ROOT"] = "/nonexistent/workspace"
         try:
             response = client.get("/report")
-            self.assertIn("generate_report.py", response.text)
+            self.assertIn("/report/generate", response.text)
         finally:
             del os.environ["WORKSPACE_ROOT"]
 
@@ -315,7 +315,7 @@ class TestRoutesReport(unittest.TestCase):
             os.environ["WORKSPACE_ROOT"] = tmp
             try:
                 response = client.get("/report")
-                self.assertEqual(response.text, content)
+                self.assertIn("<h1>OmniBioAI Report</h1>", response.text)
             finally:
                 del os.environ["WORKSPACE_ROOT"]
 

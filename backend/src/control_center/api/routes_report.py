@@ -13,27 +13,10 @@ WORKSPACE_ROOT          Root of the ecosystem checkout (default: /workspace)
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
-
 from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 
 router = APIRouter()
-
-_REPORT_RELPATH = "out/reports/omnibioai_ecosystem_report.html"
-
-
-def _workspace_root() -> Path:
-    return Path(os.environ.get("WORKSPACE_ROOT", "/workspace"))
-
-
-def _report_path() -> Path:
-    return _workspace_root() / _REPORT_RELPATH
-
-
-def report_exists() -> bool:
-    return _report_path().exists()
 
 
 @router.get("/report")

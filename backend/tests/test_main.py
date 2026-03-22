@@ -85,14 +85,43 @@ class TestDashboard(unittest.TestCase):
     def setUp(self): _reset_job()
     def test_200(self): self.assertEqual(client.get("/").status_code, 200)
     def test_html(self): self.assertIn("text/html", client.get("/").headers["content-type"])
-    def test_title(self): self.assertIn("OmniBioAI Control Center", client.get("/").text)
+    def test_title(self): self.assertIn("OmniBioAI Control Center", client.get("/dashboard").text)
     def test_generate_button(self): self.assertIn("Generate Report", client.get("/").text)
-    def test_summary_fetch(self): self.assertIn("/summary", client.get("/").text)
+    def test_summary_fetch(self): self.assertIn("/summary", client.get("/dashboard").text)
     def test_status_poll(self): self.assertIn("/report/status", client.get("/").text)
-    def test_auto_refresh(self): self.assertIn("setInterval", client.get("/").text)
-    def test_cards_container(self): self.assertIn('id="svc-tbody"', client.get("/").text)
-    def test_banner_container(self): self.assertIn('id="header-status"', client.get("/").text)
-    def test_report_link(self): self.assertIn('href="/report"', client.get("/").text)
+    def test_auto_refresh(self): self.assertIn("setInterval", client.get("/dashboard").text)
+    def test_cards_container(self): self.assertIn('id="svc-tbody"', client.get("/dashboard").text)
+    def test_banner_container(self): self.assertIn('id="header-status"', client.get("/dashboard").text)
+    def test_report_link(self): self.assertIn('href="/"', client.get("/dashboard").text)
+
+
+class TestRootWithReport(unittest.TestCase):
+    def setUp(self):
+        _reset_job()
+        self._tmp = tempfile.mkdtemp()
+        p = Path(self._tmp) / "out" / "reports"
+        p.mkdir(parents=True)
+        self._report_file = p / "omnibioai_ecosystem_report.html"
+        self._report_file.write_text("<html><body><h1>My Report</h1></body></html>")
+        os.environ["WORKSPACE_ROOT"] = self._tmp
+
+    def tearDown(self):
+        del os.environ["WORKSPACE_ROOT"]
+        import shutil
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    def test_200(self): self.assertEqual(client.get("/").status_code, 200)
+    def test_html(self): self.assertIn("text/html", client.get("/").headers["content-type"])
+    def test_injects_sticky_bar(self): self.assertIn("omni-header", client.get("/").text)
+    def test_report_content_preserved(self): self.assertIn("<h1>My Report</h1>", client.get("/").text)
+    def test_summary_in_sticky_bar(self): self.assertIn("/summary", client.get("/").text)
+    def test_setInterval_in_sticky_bar(self): self.assertIn("setInterval", client.get("/").text)
+
+    def test_no_body_tag_prepends_bar(self):
+        self._report_file.write_text("<h1>No Body Tag</h1>")
+        response = client.get("/")
+        self.assertIn("<h1>No Body Tag</h1>", response.text)
+        self.assertIn("omni-header", response.text)
 
 class TestReportGenerate(unittest.TestCase):
     def setUp(self): _reset_job()
