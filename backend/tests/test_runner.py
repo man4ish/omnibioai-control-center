@@ -349,6 +349,26 @@ class TestRoutesSummary(unittest.TestCase):
         finally:
             del os.environ["CONTROL_CENTER_CONFIG"]
 
+    def test_summary_overall_warn_when_disk_warns_but_no_down(self) -> None:
+        # A config with no services and a disk path that triggers WARN (100% threshold)
+        # causes overall_status=WARN (routes_summary.py lines 45-46)
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _write_config(f"""
+                services: {{}}
+                system:
+                  disk_checks:
+                    - path: {tmp}
+                      warn_pct_free_below: 100
+            """)
+            os.environ["CONTROL_CENTER_CONFIG"] = path
+            try:
+                data = client.get("/summary").json()
+                self.assertEqual(data["overall_status"], "WARN")
+            finally:
+                del os.environ["CONTROL_CENTER_CONFIG"]
+                os.unlink(path)
+
 
 if __name__ == "__main__":
     unittest.main()

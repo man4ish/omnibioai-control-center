@@ -90,8 +90,8 @@ class TestDashboard(unittest.TestCase):
     def test_summary_fetch(self): self.assertIn("/summary", client.get("/").text)
     def test_status_poll(self): self.assertIn("/report/status", client.get("/").text)
     def test_auto_refresh(self): self.assertIn("setInterval", client.get("/").text)
-    def test_cards_container(self): self.assertIn('id="cards"', client.get("/").text)
-    def test_banner_container(self): self.assertIn('id="banner"', client.get("/").text)
+    def test_cards_container(self): self.assertIn('id="svc-tbody"', client.get("/").text)
+    def test_banner_container(self): self.assertIn('id="header-status"', client.get("/").text)
     def test_report_link(self): self.assertIn('href="/report"', client.get("/").text)
 
 class TestReportGenerate(unittest.TestCase):

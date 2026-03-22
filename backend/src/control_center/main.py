@@ -143,7 +143,217 @@ def report_status() -> JSONResponse:
 # Dashboard UI
 # ==============================================================================
 
+
 @app.get("/", response_class=HTMLResponse)
+def root() -> HTMLResponse:  # pragma: no cover
+    """
+    Main entry point — serves the generated report HTML with an injected
+    sticky control bar (Regenerate + View Dashboard buttons).
+    Falls back to a landing page if no report has been generated yet.
+    """
+    report_path = _workspace_root() / "out" / "reports" / "omnibioai_ecosystem_report.html"
+
+    if report_path.exists():
+        report_html = report_path.read_text(encoding="utf-8")
+        port = os.environ.get("CONTROL_CENTER_PORT", "7070")
+        # Inject sticky bar after <body> tag
+        sticky_bar = f"""
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  @keyframes omni-spin {{ to {{ transform:rotate(360deg); }} }}
+  body {{ padding-top: 62px !important; }}
+  #omni-header {{
+    position:fixed;top:0;left:0;right:0;z-index:9999;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 28px;
+    background:white;
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    gap:12px;
+  }}
+  #omni-header .logo {{ display:flex;align-items:center;gap:10px; }}
+  #omni-header .logo-text {{ font-size:18px;font-weight:700;color:#2563eb;letter-spacing:-.01em; }}
+  #omni-header .logo-text span {{ font-weight:400; }}
+  #omni-header .logo-sub {{ font-size:11px;color:#9ca3af;margin-top:1px; }}
+  #omni-header .hdr-right {{ display:flex;align-items:center;gap:10px;flex-wrap:wrap; }}
+  #omni-header .status-chip {{ font-size:12px;font-weight:600;padding:5px 13px;border-radius:99px;display:inline-flex;align-items:center;gap:6px; }}
+  #omni-header .chip-green {{ background:#ecfdf5;color:#059669;border:1px solid #a7f3d0; }}
+  #omni-header .chip-amber {{ background:#fffbeb;color:#d97706;border:1px solid #fde68a; }}
+  #omni-header .chip-red {{ background:#fef2f2;color:#dc2626;border:1px solid #fecaca; }}
+  #omni-header .chip-dot {{ width:7px;height:7px;border-radius:50%;background:#10b981; }}
+  #omni-header .hdr-btn {{ font-size:13px;font-weight:600;padding:7px 15px;border-radius:8px;cursor:pointer;border:1px solid;display:inline-flex;align-items:center;gap:6px;font-family:inherit;text-decoration:none;transition:opacity .12s; }}
+  #omni-header .hdr-btn:hover {{ opacity:.88; }}
+  #omni-header .btn-outline {{ background:white;border-color:#d1d5db;color:#374151; }}
+  #omni-header .btn-primary {{ background:#2563eb;border-color:#2563eb;color:white; }}
+  #omni-header .btn-primary:disabled {{ background:#93c5fd;border-color:#93c5fd;cursor:not-allowed; }}
+  #omni-header .btn-light {{ background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8; }}
+  #omni-spin {{ width:14px;height:14px;border:2px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:omni-spin .8s linear infinite;display:none; }}
+</style>
+<header id="omni-header">
+  <div class="logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 34" width="36" height="36">
+      <polygon points="16,2 28,8 28,22 16,28 4,22 4,8" fill="none" stroke="#2563eb" stroke-width="1.8"/>
+      <path d="M11 9 C16 13,14 17,20 20 M20 9 C15 13,17 17,11 20" stroke="#2563eb" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <circle cx="16" cy="15" r="2.2" fill="#2563eb"/>
+    </svg>
+    <div>
+      <div class="logo-text">Omni<span>BioAI</span></div>
+      <div class="logo-sub">Ecosystem Report</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="status-chip chip-green" id="omni-svc-badge" style="display:none;"></div>
+    <span id="omni-rpt-ts" style="font-size:11px;color:#9ca3af;"></span>
+    <span id="omni-spin"></span>
+    <span id="omni-prog" style="font-size:11px;color:#6b7280;display:none;"></span>
+    <button id="omni-btn-regen" onclick="omniGenerate()" class="hdr-btn btn-primary">&#8635; Regenerate</button>
+    <a href="/dashboard" class="hdr-btn btn-outline">&#9881; Dashboard</a>
+  </div>
+</header>
+<script>
+(function() {{
+  // Show live service status badge
+  async function omniLoadStatus() {{
+    try {{
+      var res = await fetch('/summary');
+      var data = await res.json();
+      var svcs = data.services || [];
+      var up = svcs.filter(function(s){{return s.status==='UP';}}).length;
+      var badge = document.getElementById('omni-svc-badge');
+      var dot = '<div class="chip-dot" style="background:' + (up===svcs.length?'#10b981':'#f59e0b') + ';"></div>';
+      badge.innerHTML = dot + up + '/' + svcs.length + ' UP';
+      badge.style.display = 'inline-flex';
+      badge.className = 'status-chip ' + (up===svcs.length?'chip-green':'chip-amber');
+    }} catch(e) {{}}
+  }}
+
+  // Report status polling
+  async function omniPollStatus() {{
+    try {{
+      var res = await fetch('/report/status');
+      var state = await res.json();
+      var btn = document.getElementById('omni-btn-regen');
+      var spin = document.getElementById('omni-spin');
+      var prog = document.getElementById('omni-prog');
+      var ts = document.getElementById('omni-rpt-ts');
+      if(state.status === 'running') {{
+        btn.disabled = true;
+        spin.style.display = 'inline-block';
+        prog.style.display = 'inline';
+        prog.textContent = 'Generating…';
+        setTimeout(omniPollStatus, 2000);
+      }} else if(state.status === 'done') {{
+        btn.disabled = false;
+        spin.style.display = 'none';
+        prog.style.display = 'none';
+        // Reload page to show new report
+        window.location.reload();
+      }} else if(state.status === 'error') {{
+        btn.disabled = false;
+        spin.style.display = 'none';
+        prog.style.display = 'inline';
+        prog.style.color = '#dc2626';
+        prog.textContent = 'Error: ' + (state.message || 'unknown');
+      }} else {{
+        btn.disabled = false;
+        spin.style.display = 'none';
+        prog.style.display = 'none';
+        if(state.report_generated_at) {{
+          ts.textContent = 'Generated: ' + new Date(state.report_generated_at).toLocaleString();
+        }}
+      }}
+    }} catch(e) {{}}
+  }}
+
+  window.omniGenerate = async function() {{
+    try {{
+      var res = await fetch('/report/generate', {{method:'POST'}});
+      if(res.status === 409) return;
+      var btn = document.getElementById('omni-btn-regen');
+      var spin = document.getElementById('omni-spin');
+      var prog = document.getElementById('omni-prog');
+      btn.disabled = true;
+      spin.style.display = 'inline-block';
+      prog.style.display = 'inline';
+      prog.textContent = 'Generating… (2–5 min)';
+      setTimeout(omniPollStatus, 2000);
+    }} catch(e) {{ console.error(e); }}
+  }};
+
+  omniLoadStatus();
+  setInterval(omniLoadStatus, 15000);
+  omniPollStatus();
+}})();
+</script>
+"""
+        # Inject after opening <body> tag
+        if '<body>' in report_html:
+            report_html = report_html.replace('<body>', '<body>' + sticky_bar, 1)
+        else:
+            report_html = sticky_bar + report_html
+
+        return HTMLResponse(content=report_html)
+
+    # No report yet — show landing page
+    return HTMLResponse(content="""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>OmniBioAI — Generate Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',system-ui,sans-serif;background:#f9fafb;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+    .card{background:white;border:1px solid #e5e7eb;border-radius:14px;padding:48px;max-width:480px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.06);}
+    .logo{font-size:22px;font-weight:700;color:#2563eb;margin-bottom:8px;}
+    .sub{font-size:14px;color:#9ca3af;margin-bottom:32px;}
+    .btn{font-size:14px;font-weight:600;padding:12px 28px;border-radius:9px;cursor:pointer;border:none;background:#2563eb;color:white;font-family:inherit;display:inline-flex;align-items:center;gap:8px;}
+    .btn:disabled{background:#93c5fd;cursor:not-allowed;}
+    .btn-outline{background:white;border:1px solid #d1d5db;color:#374151;margin-top:10px;}
+    .msg{font-size:12px;color:#6b7280;margin-top:16px;}
+    .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;display:none;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">OmniBioAI</div>
+    <div class="sub">No ecosystem report found. Generate one to get started.</div>
+    <button class="btn" id="btn" onclick="generate()">
+      <span class="spin" id="spin"></span>
+      &#128196; Generate Report
+    </button>
+    <br>
+    <a href="/dashboard" class="btn btn-outline" style="margin-top:12px;display:inline-flex;">&#9881; View Dashboard</a>
+    <div class="msg" id="msg"></div>
+  </div>
+<script>
+  async function generate() {{
+    var btn=document.getElementById('btn'),spin=document.getElementById('spin'),msg=document.getElementById('msg');
+    btn.disabled=true;spin.style.display='inline-block';msg.textContent='Generating report… this takes 2–5 minutes';
+    try{{
+      await fetch('/report/generate',{{method:'POST'}});
+      poll();
+    }}catch(e){{msg.textContent='Error: '+e;btn.disabled=false;spin.style.display='none';}}
+  }}
+  async function poll(){{
+    try{{
+      var res=await fetch('/report/status'),state=await res.json();
+      if(state.status==='done'){{window.location.reload();}}
+      else if(state.status==='error'){{
+        document.getElementById('msg').textContent='Error: '+(state.message||'unknown');
+        document.getElementById('btn').disabled=false;
+        document.getElementById('spin').style.display='none';
+      }}else{{setTimeout(poll,2000);}}
+    }}catch(e){{setTimeout(poll,3000);}}
+  }}
+</script>
+</body>
+</html>
+""")
+
+@app.get("/dashboard", response_class=HTMLResponse)
 def dashboard() -> str:  # pragma: no cover
     """
     Live health dashboard with:
@@ -205,10 +415,6 @@ def dashboard() -> str:  # pragma: no cover
     .omni-card-h { padding:11px 18px; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; justify-content:space-between; background:#fafafa; }
     .omni-card-t { font-size:13px; font-weight:700; color:#111827; }
     .omni-card-b { padding:16px 18px; }
-    .report-row { display:flex; align-items:center; gap:14px; }
-    .report-icon { width:40px; height:40px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-    .report-title { font-size:13px; font-weight:700; color:#111827; margin-bottom:2px; }
-    .report-meta { font-size:11px; color:#9ca3af; }
     .spinner { width:14px; height:14px; border:2px solid #e5e7eb; border-top-color:#2563eb; border-radius:50%; animation:spin .8s linear infinite; display:inline-block; }
     @keyframes spin { to { transform:rotate(360deg); } }
     .progress-msg { font-size:11px; color:#6b7280; }
@@ -262,8 +468,10 @@ def dashboard() -> str:  # pragma: no cover
       <span id="header-status-text">Checking&hellip;</span>
     </div>
     <button class="btn btn-outline btn-sm" onclick="loadHealth()">&#8635; Refresh</button>
+    <span id="rpt-spinner-hdr" class="spinner" style="display:none;"></span>
+    <span id="rpt-progress-hdr" class="progress-msg" style="display:none;font-size:11px;"></span>
     <button class="btn btn-primary btn-sm" id="btn-generate-hdr" onclick="generateReport()">Generate Report</button>
-    <a class="btn btn-light btn-sm" id="btn-view-hdr" href="/report" target="_blank" style="display:none;">View Report &#8599;</a>
+    <a class="btn btn-light btn-sm" id="btn-view-hdr" href="/" style="display:none;">View Report &#8599;</a>
   </div>
 </header>
 
@@ -289,27 +497,6 @@ def dashboard() -> str:  # pragma: no cover
     <div class="kpi-card kpi-red"><div class="kpi-label">Down</div><div class="kpi-val" id="kpi-down">&mdash;</div><div class="kpi-sub">need attention</div></div>
     <div class="kpi-card kpi-amber"><div class="kpi-label">Degraded</div><div class="kpi-val" id="kpi-warn">&mdash;</div><div class="kpi-sub">WARN</div></div>
     <div class="kpi-card kpi-blue"><div class="kpi-label">Disk warnings</div><div class="kpi-val" id="kpi-disk">&mdash;</div><div class="kpi-sub">paths checked</div></div>
-  </div>
-
-  <div class="omni-card">
-    <div class="omni-card-h">
-      <span class="omni-card-t">Ecosystem Report</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <span id="rpt-spinner" class="spinner" style="display:none;"></span>
-        <span id="rpt-progress" class="progress-msg" style="display:none;"></span>
-        <button class="btn btn-primary btn-sm" id="btn-generate" onclick="generateReport()">Generate Report</button>
-        <a class="btn btn-light btn-sm" id="btn-view" href="/report" target="_blank" style="display:none;">View Report &#8599;</a>
-      </div>
-    </div>
-    <div class="omni-card-b" style="padding:14px 18px;">
-      <div class="report-row">
-        <div class="report-icon">&#128196;</div>
-        <div>
-          <div class="report-title">omnibioai_ecosystem_report.html</div>
-          <div class="report-meta" id="report-meta">Architecture &middot; Projects &middot; Languages &middot; Coverage &middot; Health</div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div class="omni-card">

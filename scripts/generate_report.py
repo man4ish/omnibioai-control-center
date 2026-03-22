@@ -75,7 +75,7 @@ DEFAULT_TARGETS = [
 ]
 
 DEFAULT_OUT_RELPATH       = "out/reports/omnibioai_ecosystem_report.html"
-DEFAULT_TITLE             = "OmniBioAI Ecosystem — Architecture + Codebase Statistics + Coverage"
+DEFAULT_TITLE             = "OmniBioAI Ecosystem"
 DEFAULT_CONTROL_CENTER_URL = "http://127.0.0.1:7070"
 
 COVERAGE_CMD = ["pytest", "--cov=.", "--cov-report=term-missing"]
@@ -117,6 +117,7 @@ class ServiceHealth:
     status:     str           # UP | DOWN | WARN
     latency_ms: Optional[int]
     message:    str
+    ui_url:     Optional[str] = None
 
 
 @dataclass
@@ -331,6 +332,7 @@ def _parse_service(raw: Dict[str, Any]) -> ServiceHealth:
         type=str(raw.get("type", "unknown")),
         target=str(raw.get("target", "-")),
         status=str(raw.get("status", "DOWN")).upper(),
+        ui_url=raw.get("ui_url") or None,
         latency_ms=raw.get("latency_ms"),
         message=str(raw.get("message", "")),
     )
@@ -928,9 +930,7 @@ def health_section_html(health: EcosystemHealth) -> str:
   <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;">
     Control Center API is not reachable</div>
   <div style="font-size:12px;color:#9CA3AF;margin-bottom:16px;">
-    Start the Control Center and regenerate the report, or visit
-    <code style="background:#F8FAFC;padding:2px 6px;border-radius:4px;font-size:11px;">
-    /summary</code> directly.
+    Start the Control Center and regenerate the report to see live health data.
   </div>
   <code style="display:block;background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;
                padding:12px 16px;font-size:12px;color:#374151;text-align:left;">
@@ -939,13 +939,15 @@ def health_section_html(health: EcosystemHealth) -> str:
 </div>
 """
 
-    # ── KPI strip ────────────────────────────────────────────────────────────
+    # ── Counts ───────────────────────────────────────────────────────────────
     total_svc  = len(health.services)
     up_count   = sum(1 for s in health.services if s.status == "UP")
     down_count = sum(1 for s in health.services if s.status == "DOWN")
     warn_count = sum(1 for s in health.services if s.status == "WARN")
     disk_warn  = sum(1 for d in health.disk if d.status != "UP")
+    checked_at = health.generated_at or "unknown"
 
+    # ── KPI strip ────────────────────────────────────────────────────────────
     def _kpi(accent, label, value, sub):
         return (
             f'<div style="background:white;border:1px solid #E5E7EB;border-radius:12px;'
@@ -959,90 +961,196 @@ def health_section_html(health: EcosystemHealth) -> str:
         )
 
     kpis = (
-        _kpi("#D1D5DB", "Services",       str(total_svc),  "monitored")
-        + _kpi("#639922", "Healthy",       str(up_count),   "UP")
-        + _kpi("#E24B4A", "Down",          str(down_count), "need attention")
-        + _kpi("#BA7517", "Degraded",      str(warn_count), "WARN")
-        + _kpi("#BA7517" if disk_warn else "#639922",
+        _kpi("#D1D5DB", "Services",   str(total_svc),  "monitored")
+        + _kpi("#10B981", "Healthy",  str(up_count),   "UP")
+        + _kpi("#EF4444", "Down",     str(down_count), "need attention")
+        + _kpi("#F59E0B", "Degraded", str(warn_count), "WARN")
+        + _kpi("#F59E0B" if disk_warn else "#10B981",
                "Disk warnings", str(disk_warn), "paths checked")
     )
 
-    # ── Service cards ────────────────────────────────────────────────────────
-    TYPE_ICONS = {"http": "HTTP", "mysql": "MySQL", "redis": "Redis",
-                  "tcp": "TCP", "disk": "Disk"}
+    # ── Chart data ────────────────────────────────────────────────────────────
+    donut_data   = [up_count, down_count, warn_count]
+    donut_colors = '["#10B981","#EF4444","#F59E0B"]'
+    donut_labels = '["UP","DOWN","WARN"]'
+    lat_labels   = ",".join(f'"{s.name}"' for s in health.services if s.latency_ms is not None)
+    lat_data     = ",".join(str(s.latency_ms) for s in health.services if s.latency_ms is not None)
+
+    # ── Service cards with UI links ───────────────────────────────────────────
+    SERVICE_ICONS = {
+        "mysql": ("🗄️", "#3B82F6"),
+        "redis": ("⚡", "#EF4444"),
+        "http":  ("🌐", "#10B981"),
+        "tcp":   ("🔌", "#8B5CF6"),
+    }
 
     def _svc_card(s: ServiceHealth) -> str:
         latency = f"{s.latency_ms} ms" if s.latency_ms is not None else "—"
-        type_lbl = TYPE_ICONS.get(s.type.lower(), s.type.upper())
-        border = {"UP":"#D1FAE5","DOWN":"#FEE2E2","WARN":"#FEF3C7"}.get(s.status,"#E5E7EB")
+        icon, _ = SERVICE_ICONS.get(s.type.lower(), ("⚙️", "#6B7280"))
+        border  = {"UP": "#10B981", "DOWN": "#EF4444", "WARN": "#F59E0B"}.get(s.status, "#E5E7EB")
+        bg      = {"UP": "#F0FDF4", "DOWN": "#FEF2F2", "WARN": "#FFFBEB"}.get(s.status, "white")
+        lat_col = "#10B981" if s.latency_ms is not None and s.latency_ms < 10 else "#6B7280"
+        ui_btn  = (
+            f'<a href="{s.ui_url}" target="_blank" style="'
+            f'display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;'
+            f'color:#2563EB;background:#EFF6FF;border:1px solid #BFDBFE;'
+            f'border-radius:6px;padding:4px 10px;text-decoration:none;margin-top:10px;">'
+            f'Open UI &#8599;</a>'
+        ) if s.ui_url else ""
+
         return (
-            f'<div style="background:white;border:1px solid {border};border-radius:12px;padding:16px;">'
-            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;'
-            f'margin-bottom:10px;">'
-            f'<div style="font-size:13px;font-weight:600;color:#111827;">{s.name}</div>'
-            f'{_status_pill(s.status)}</div>'
+            f'<div style="background:{bg};border:1.5px solid {border}33;'
+            f'border-left:4px solid {border};border-radius:12px;padding:16px;">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+            f'<div style="display:flex;align-items:center;gap:8px;">'
+            f'<span style="font-size:20px;">{icon}</span>'
+            f'<span style="font-size:14px;font-weight:700;color:#111827;">{s.name}</span>'
+            f'</div>{_status_pill(s.status)}</div>'
             f'<div style="font-size:11px;color:#6B7280;display:grid;'
-            f'grid-template-columns:auto 1fr;gap:3px 10px;">'
-            f'<span style="color:#9CA3AF;">Type</span><span>{type_lbl}</span>'
+            f'grid-template-columns:80px 1fr;gap:4px 8px;">'
             f'<span style="color:#9CA3AF;">Target</span>'
-            f'<span style="word-break:break-all;">{s.target}</span>'
-            f'<span style="color:#9CA3AF;">Latency</span><span>{latency}</span>'
-            f'<span style="color:#9CA3AF;">Message</span><span>{s.message or "—"}</span>'
-            f'</div></div>'
+            f'<span style="word-break:break-all;font-family:monospace;font-size:10px;">{s.target}</span>'
+            f'<span style="color:#9CA3AF;">Latency</span>'
+            f'<span style="color:{lat_col};font-weight:600;">{latency}</span>'
+            f'<span style="color:#9CA3AF;">Message</span>'
+            f'<span>{s.message or "—"}</span>'
+            f'</div>{ui_btn}</div>'
         )
 
     svc_cards = "".join(_svc_card(s) for s in health.services)
 
-    # ── Disk cards ────────────────────────────────────────────────────────────
-    def _disk_card(d: DiskHealth) -> str:
-        border = {"UP":"#D1FAE5","WARN":"#FEF3C7","DOWN":"#FEE2E2"}.get(d.status,"#E5E7EB")
+    # ── Disk progress bars ────────────────────────────────────────────────────
+    def _disk_bar(d: DiskHealth) -> str:
+        import re as _re
+        m = _re.search(r"([0-9.]+)%", d.message or "")
+        pct       = float(m.group(1)) if m else 0
+        bar_color = {"UP": "#10B981", "WARN": "#F59E0B", "DOWN": "#EF4444"}.get(d.status, "#9CA3AF")
+        border    = {"UP": "#D1FAE5", "WARN": "#FEF3C7", "DOWN": "#FEE2E2"}.get(d.status, "#E5E7EB")
         return (
             f'<div style="background:white;border:1px solid {border};border-radius:12px;padding:16px;">'
-            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;'
-            f'margin-bottom:10px;">'
-            f'<div style="font-size:13px;font-weight:600;color:#111827;">{d.name}</div>'
-            f'{_status_pill(d.status)}</div>'
-            f'<div style="font-size:11px;color:#6B7280;display:grid;'
-            f'grid-template-columns:auto 1fr;gap:3px 10px;">'
-            f'<span style="color:#9CA3AF;">Path</span><span>{d.target}</span>'
-            f'<span style="color:#9CA3AF;">Message</span><span>{d.message}</span>'
+            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+            f'<div style="font-size:13px;font-weight:600;color:#111827;">'
+            f'{d.name.replace("disk:","")}</div>'
+            f'<div style="font-size:13px;font-weight:700;color:{bar_color};">{d.message}</div>'
+            f'</div>'
+            f'<div style="font-size:10px;color:#9CA3AF;margin-bottom:8px;">{d.target}</div>'
+            f'<div style="background:#F3F4F6;border-radius:99px;height:6px;overflow:hidden;">'
+            f'<div style="width:{pct:.1f}%;height:100%;background:{bar_color};border-radius:99px;"></div>'
             f'</div></div>'
         )
 
     disk_section = ""
     if health.disk:
-        disk_cards = "".join(_disk_card(d) for d in health.disk)
+        disk_bars = "".join(_disk_bar(d) for d in health.disk)
         disk_section = f"""
-<div style="margin-top:20px;">
+<div style="margin-top:24px;">
   <div style="font-size:12px;font-weight:600;color:#9CA3AF;text-transform:uppercase;
-              letter-spacing:.06em;margin-bottom:12px;">Disk checks</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
-    {disk_cards}
+              letter-spacing:.06em;margin-bottom:12px;">Disk Checks</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">
+    {disk_bars}
   </div>
 </div>"""
 
-    checked_at = health.generated_at or "unknown"
-
     return f"""
 {_overall_banner(health.overall_status)}
-
 <div style="font-size:12px;color:#9CA3AF;margin-bottom:20px;">
-  Checked at: {checked_at} &nbsp;·&nbsp;
-  Source: Control Center <code style="font-size:11px;background:#F8FAFC;
-  padding:1px 5px;border-radius:4px;">/summary</code>
+  Checked: <strong style="color:#374151;">{checked_at}</strong>
+  &nbsp;&middot;&nbsp; Source: Control Center
+  <code style="font-size:11px;background:#F8FAFC;padding:1px 5px;border-radius:4px;">/summary</code>
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:24px;">
   {kpis}
 </div>
 
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:24px;">
+  <div style="background:white;border:1px solid #E5E7EB;border-radius:12px;padding:20px;">
+    <div style="font-size:13px;font-weight:600;color:#111827;margin-bottom:4px;">Service Health</div>
+    <div style="font-size:11px;color:#9CA3AF;margin-bottom:16px;">Status distribution</div>
+    <div style="display:flex;align-items:center;gap:24px;">
+      <div style="position:relative;width:120px;height:120px;flex-shrink:0;">
+        <canvas id="health-donut" width="120" height="120"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+             align-items:center;justify-content:center;pointer-events:none;">
+          <div style="font-size:24px;font-weight:700;color:#111827;">{up_count}</div>
+          <div style="font-size:10px;color:#9CA3AF;">of {total_svc} UP</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:10px;height:10px;border-radius:2px;background:#10B981;display:inline-block;"></span>
+          <span style="font-size:12px;color:#374151;">Healthy <strong>{up_count}</strong></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:10px;height:10px;border-radius:2px;background:#EF4444;display:inline-block;"></span>
+          <span style="font-size:12px;color:#374151;">Down <strong>{down_count}</strong></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:10px;height:10px;border-radius:2px;background:#F59E0B;display:inline-block;"></span>
+          <span style="font-size:12px;color:#374151;">Degraded <strong>{warn_count}</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="background:white;border:1px solid #E5E7EB;border-radius:12px;padding:20px;">
+    <div style="font-size:13px;font-weight:600;color:#111827;margin-bottom:4px;">Response Latency</div>
+    <div style="font-size:11px;color:#9CA3AF;margin-bottom:16px;">Per service (ms)</div>
+    <div style="position:relative;height:120px;"><canvas id="health-latency"></canvas></div>
+  </div>
+</div>
+
+<script>
+registerChartInit('tab-health', function(){{
+  new Chart(document.getElementById('health-donut'), {{
+    type: 'doughnut',
+    data: {{
+      labels: {donut_labels},
+      datasets: [{{ data: {donut_data}, backgroundColor: {donut_colors}, borderWidth: 0, hoverOffset: 4 }}]
+    }},
+    options: {{
+      responsive: false, cutout: '68%',
+      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
+        label: function(ctx) {{ return ctx.label + ': ' + ctx.raw; }}
+      }} }} }}
+    }}
+  }});
+  new Chart(document.getElementById('health-latency'), {{
+    type: 'bar',
+    data: {{
+      labels: [{lat_labels}],
+      datasets: [{{
+        data: [{lat_data}],
+        backgroundColor: [{lat_data}].map(function(v) {{
+          return v < 5 ? '#10B981' : v < 20 ? '#F59E0B' : '#EF4444';
+        }}),
+        borderRadius: 4, borderWidth: 0
+      }}]
+    }},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
+        label: function(ctx) {{ return ctx.parsed.y + ' ms'; }}
+      }} }} }},
+      scales: {{
+        x: {{ ticks: {{ font: {{ size: 10 }}, color: '#9CA3AF' }}, grid: {{ display: false }}, border: {{ display: false }} }},
+        y: {{ ticks: {{ font: {{ size: 10 }}, color: '#9CA3AF',
+              callback: function(v) {{ return v + ' ms'; }} }},
+              grid: {{ color: 'rgba(0,0,0,0.05)' }}, border: {{ display: false }} }}
+      }}
+    }}
+  }});
+}});
+</script>
+
 <div style="font-size:12px;font-weight:600;color:#9CA3AF;text-transform:uppercase;
             letter-spacing:.06em;margin-bottom:12px;">Services</div>
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">
   {svc_cards}
 </div>
 {disk_section}
 """
+
+
 
 
 # ==============================================================================
@@ -1086,8 +1194,7 @@ def build_report(
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{ font-family: 'IBM Plex Sans', Arial, sans-serif; background: #F1F5F9; color: #111827; }}
     .page-wrap {{ max-width: 1320px; margin: 0 auto; padding: 32px 28px 48px; }}
-    .page-title {{ font-size: 20px; font-weight: 700; color: #0F172A; margin-bottom: 4px; }}
-    .page-sub   {{ font-size: 12px; color: #9CA3AF; margin-bottom: 22px; }}
+
     .global-kpi {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }}
     .global-kpi-card {{
       background: white; border: 1px solid #E5E7EB; border-radius: 12px;
@@ -1121,8 +1228,24 @@ def build_report(
 </head>
 <body>
 <div class="page-wrap">
-  <div class="page-title">{title}</div>
-  <div class="page-sub">Generated: {timestamp}</div>
+  <div style="
+    display:flex;align-items:flex-start;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;margin-bottom:22px;
+    padding:20px 24px;
+    border-radius:16px;
+    background:
+      radial-gradient(1100px 240px at 10% 0%, rgba(37,99,235,.16), transparent 60%),
+      radial-gradient(900px 220px at 95% 15%, rgba(37,99,235,.10), transparent 55%),
+      linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.03));
+    border:1px solid rgba(37,99,235,.18);
+    box-shadow:0 10px 26px rgba(2,6,23,.06);
+  ">
+    <div>
+      <h2 style="font-size:22px;font-weight:700;letter-spacing:-.02em;color:#0F172A;margin:0 0 6px 0;">{title}</h2>
+      <div style="font-size:13px;color:#374151;margin-bottom:6px;">Architecture &middot; Codebase &middot; Coverage &middot; Health</div>
+      <div style="font-size:11px;color:#6B7280;">Generated: {timestamp}</div>
+    </div>
+  </div>
 
   <div class="global-kpi">
     <div class="global-kpi-card"><div class="lbl">Files</div><div class="val">{fmt_int(grand.files)}</div></div>

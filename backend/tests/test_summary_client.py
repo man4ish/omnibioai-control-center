@@ -16,6 +16,7 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Dict
+from unittest.mock import patch
 
 # Import from the standalone summary_client module
 from control_center.utils.summary_client import (
@@ -246,6 +247,20 @@ class TestFetchSummary(unittest.TestCase):
         # A non-JSON 500 response should be caught gracefully
         self.assertEqual(health.overall_status, "UNREACHABLE")
         self.assertIsNotNone(health.error)
+
+    def test_generic_exception_returns_unreachable(self) -> None:
+        # Trigger the generic except Exception branch (lines 121-122) by
+        # patching urlopen to raise a non-URLError exception.
+        with patch("urllib.request.urlopen", side_effect=RuntimeError("mock failure")):
+            health = fetch_summary("http://127.0.0.1:9999", timeout_s=1)
+        self.assertEqual(health.overall_status, "UNREACHABLE")
+        self.assertIsNotNone(health.error)
+        self.assertIn("RuntimeError", health.error)
+
+    def test_generic_exception_error_message(self) -> None:
+        with patch("urllib.request.urlopen", side_effect=ValueError("bad json format")):
+            health = fetch_summary("http://127.0.0.1:9999", timeout_s=1)
+        self.assertIn("bad json format", health.error)
 
 
 if __name__ == "__main__":

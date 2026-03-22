@@ -18,6 +18,7 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -146,6 +147,39 @@ class TestCheckHttp(unittest.TestCase):
         url = "http://127.0.0.1:19998/health"
         result = check_http("svc", {"url": url, "timeout_s": 1})
         self.assertEqual(result["target"], url)
+
+    def test_warn_on_non_2xx_non_raising_response(self) -> None:
+        # Line 40 in checks/http.py: urlopen returns a response with code outside
+        # 200-399 without raising. Mock urlopen to return a fake response with
+        # status 206 that becomes > 400 via the getattr path... Actually simulate
+        # a response object whose status attribute reports a non-2xx/3xx code.
+        # We use status=400 to trigger the WARN branch (400 is not 200<=code<400).
+        fake_resp = MagicMock()
+        fake_resp.__enter__ = lambda s: s
+        fake_resp.__exit__ = MagicMock(return_value=False)
+        fake_resp.read.return_value = b"data"
+        fake_resp.status = 400
+
+        url = "http://127.0.0.1:9999/health"
+        with patch("urllib.request.urlopen", return_value=fake_resp):
+            result = check_http("svc", {"url": url})
+
+        self.assertEqual(result["status"], "WARN")
+        self.assertIn("400", result["message"])
+        self.assertEqual(result["name"], "svc")
+
+    def test_tcp_socket_close_exception_is_silenced(self) -> None:
+        # Line 46 in checks/tcp.py: s.close() raises inside finally — must be silent.
+        # Patch socket.socket so its close() raises, verifying the finally block
+        # catches it without propagating.
+        with patch("control_center.checks.tcp.socket.socket") as mock_socket_cls:
+            mock_sock = MagicMock()
+            mock_sock.connect.side_effect = ConnectionRefusedError("refused")
+            mock_sock.close.side_effect = OSError("close failed")
+            mock_socket_cls.return_value = mock_sock
+            # Should not raise — the finally block silences the close() error
+            result = check_tcp("svc", "127.0.0.1", 9999, "tcp")
+        self.assertEqual(result["status"], "DOWN")
 
 
 # ==============================================================================
