@@ -57,7 +57,7 @@ EXCLUDE_DIRS = (
     "obsolete,staticfiles,node_modules,.venv,env,__pycache__,migrations,"
     "admin,venv,gnn_env,venv_sys,work,input,demo,md"
 )
-EXCLUDE_EXTS = "svg,json,txt,csv,lock,min.js,map,md,pyc"
+EXCLUDE_EXTS = "svg,json,txt,csv,lock,min.js,map,pyc"
 NOT_MATCH_D  = r"(data|uploads|downloads|cache|results|logs)"
 
 DEFAULT_TARGETS = [
@@ -402,6 +402,7 @@ _NODE_DEFS: Dict[str, Tuple[str, int]] = {
     "omnibioai-model-registry":   ("Services",      2),
     "omnibioai-tes":              ("Execution",     1),
     "omnibioai-tool-runtime":     ("Tool Runners",  1),
+    "omnibioai-tool-images":      ("Tool Runners",  3),
 }
 
 _ARCH_EDGES: List[Tuple[str, str, bool]] = [
@@ -415,6 +416,7 @@ _ARCH_EDGES: List[Tuple[str, str, bool]] = [
     ("omnibioai-toolserver",       "omnibioai-model-registry",False),
     ("omnibioai-toolserver",       "omnibioai-tes",           False),
     ("omnibioai-tes",              "omnibioai-tool-runtime",  False),
+    ("omnibioai-tool-images",      "omnibioai-tool-runtime",  False),
     ("omnibioai-control-center",   "omnibioai",               False),
     ("omnibioai-control-center",   "omnibioai-tes",           False),
     ("omnibioai-control-center",   "omnibioai-toolserver",    False),
@@ -1171,6 +1173,7 @@ def build_report(
 ) -> None:
     out_html.parent.mkdir(parents=True, exist_ok=True)
     total_all = grand.blank + grand.comment + grand.code
+    doc_lines = language_totals.get("Markdown", Totals()).code
 
     nodes_present = [n for n in _NODE_DEFS if n in project_totals]
     arch_html  = architecture_section_html(project_totals, nodes_present)
@@ -1254,6 +1257,7 @@ def build_report(
     <div class="global-kpi-card"><div class="lbl">Code lines</div><div class="val">{fmt_int(grand.code)}</div></div>
     <div class="global-kpi-card"><div class="lbl">Comment lines</div><div class="val">{fmt_int(grand.comment)}</div></div>
     <div class="global-kpi-card"><div class="lbl">Blank lines</div><div class="val">{fmt_int(grand.blank)}</div></div>
+    <div class="global-kpi-card"><div class="lbl">Documentation</div><div class="val">{fmt_int(doc_lines)}</div></div>
     <div class="global-kpi-card"><div class="lbl">Total lines</div><div class="val">{fmt_int(total_all)}</div></div>
   </div>
 
