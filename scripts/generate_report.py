@@ -72,6 +72,7 @@ DEFAULT_TARGETS = [
     "omnibioai_sdk",
     "omnibioai-workflow-bundles",
     "omnibioai-model-registry",
+    "omnibioai-tool-images",
 ]
 
 DEFAULT_OUT_RELPATH       = "out/reports/omnibioai_ecosystem_report.html"
@@ -175,6 +176,7 @@ def run_cloc(path: Path) -> Tuple[Totals, Dict[str, Totals]]:
         "--exclude-dir", EXCLUDE_DIRS,
         "--exclude-ext", EXCLUDE_EXTS,
         "--fullpath", "--not-match-d", NOT_MATCH_D,
+        "--force-lang", "Dockerfile,Dockerfile", # <--- ADD THIS LINE
         "--json",
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True)
@@ -1364,7 +1366,10 @@ def generate_report(
 
     if skip_coverage:
         print("→ Skipping coverage collection (--skip-coverage)")
-        coverage_df = pd.DataFrame()
+        coverage_df = pd.DataFrame(columns=[
+            "repo","path","status","returncode","statements",
+            "missed","branches","partial_branches","coverage_pct",
+            "coverage_band","fail_under","total_line","stderr_tail"])
     else:
         print("→ Collecting pytest coverage…")
         coverage_df = collect_coverage(target_paths)
