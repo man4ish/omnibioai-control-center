@@ -191,6 +191,29 @@ class TestReportStatus(unittest.TestCase):
         main_module._job.start(); main_module._job.fail("Script not found")
         self.assertIn("Script not found", client.get("/report/status").json()["message"])
 
+class TestResetJobToIdle(unittest.TestCase):
+    def setUp(self): _reset_job()
+
+    def test_resets_done_to_idle(self):
+        main_module._job.start(); main_module._job.finish("ok")
+        main_module._reset_job_to_idle(delay_s=0)
+        self.assertEqual(main_module._job.as_dict()["status"], "idle")
+
+    def test_resets_error_to_idle(self):
+        main_module._job.start(); main_module._job.fail("bad")
+        main_module._reset_job_to_idle(delay_s=0)
+        self.assertEqual(main_module._job.as_dict()["status"], "idle")
+
+    def test_does_not_reset_running(self):
+        main_module._job.start()
+        main_module._reset_job_to_idle(delay_s=0)
+        self.assertEqual(main_module._job.as_dict()["status"], "running")
+
+    def test_does_not_reset_idle(self):
+        main_module._reset_job_to_idle(delay_s=0)
+        self.assertEqual(main_module._job.as_dict()["status"], "idle")
+
+
 class TestRunReportJob(unittest.TestCase):
     def setUp(self): _reset_job(); main_module._job.start()
     def test_fails_script_not_found(self):
