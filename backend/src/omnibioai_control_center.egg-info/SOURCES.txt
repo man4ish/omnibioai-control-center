@@ -1,4 +1,5 @@
 pyproject.toml
+src/control_center/combined_control_center.py
 src/control_center/main.py
 src/control_center/api/routes_health.py
 src/control_center/api/routes_report.py
@@ -16,5 +17,6 @@ src/omnibioai_control_center.egg-info/dependency_links.txt
 src/omnibioai_control_center.egg-info/requires.txt
 src/omnibioai_control_center.egg-info/top_level.txt
 tests/test_checks.py
+tests/test_main.py
 tests/test_runner.py
 tests/test_summary_client.py
