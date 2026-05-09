@@ -130,12 +130,17 @@ def get_sif_images() -> JSONResponse:
 def get_plugin_images() -> JSONResponse:
     images_found: dict[str, dict] = {}
     _IMG_RE = re.compile(
-        r'docker_image\s*[=:]\s*["\']?([a-zA-Z0-9._/:-][^\s"\'#,}\]]+)["\']?'
+        r'(?:docker_image|DOCKER_IMAGE|SCANPY_IMAGE|QC_IMAGE|WF_IMAGE|plugin_image|[A-Z_]*_IMAGE)\s*[=:]\s*["\']?([a-zA-Z0-9._/:-][^\s"\'#,}\]]+)["\']?'
     )
+
+    EXCLUDE_DIRS = {"work", "out", "tmpdata", "data", ".git", "__pycache__", "node_modules", "htmlcov", "obsolete", "backup_plugins", "backup"}
 
     if _OMNIBIOAI_BASE.exists():
         for ext in ("*.py", "*.yaml", "*.yml"):
             for fpath in _OMNIBIOAI_BASE.rglob(ext):
+                # Skip runtime/output directories
+                if any(part in EXCLUDE_DIRS for part in fpath.parts):
+                    continue
                 try:
                     content = fpath.read_text(encoding="utf-8", errors="ignore")
                 except OSError:
