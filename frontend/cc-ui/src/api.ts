@@ -95,6 +95,35 @@ export async function fetchConfig(): Promise<string> {
   return r.text()
 }
 
+export interface ProjectRow {
+  name: string; full: string; cat: string; catLabel: string
+  files: number; code: number; comment: number; blank: number; pct: number
+}
+
+export interface LanguageRow {
+  name: string; type: string; typeLabel: string
+  files: number; code: number; comment: number; blank: number; pct: number
+}
+
+export interface CoverageRow {
+  repo: string; status: string; pct: number | null
+  stmts: number | null; missed: number | null; branches: number | null; failUnder: number | null
+}
+
+export interface ReportData {
+  generated_at: string
+  grand: { files: number; code: number; comment: number; blank: number }
+  projects: ProjectRow[]
+  languages: LanguageRow[]
+  coverage: CoverageRow[]
+}
+
+export async function fetchReportData(): Promise<ReportData> {
+  const r = await fetch(`${BASE}/report/data`)
+  if (!r.ok) throw new Error(`/report/data ${r.status}`)
+  return r.json()
+}
+
 export async function fetchReportStatus(): Promise<ReportStatus> {
   const r = await fetch(`${BASE}/report/status`)
   if (!r.ok) throw new Error(`/report/status ${r.status}`)

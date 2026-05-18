@@ -20,9 +20,9 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const STATUS_CFG = {
-  UP:   { label: 'All systems operational', bg: '#ecfdf5', color: '#059669', border: '#a7f3d0', dot: '#059669', pulse: true },
-  WARN: { label: 'Services degraded',       bg: '#fffbeb', color: '#d97706', border: '#fde68a', dot: '#d97706', pulse: false },
-  DOWN: { label: 'One or more systems down',bg: '#fef2f2', color: '#dc2626', border: '#fecaca', dot: '#dc2626', pulse: false },
+  UP:   { label: 'All systems operational', bg: 'rgba(34,197,94,0.12)',   color: '#22c55e', border: 'rgba(34,197,94,0.3)',   dot: '#22c55e', pulse: true },
+  WARN: { label: 'Services degraded',       bg: 'rgba(245,158,11,0.12)',  color: '#f59e0b', border: 'rgba(245,158,11,0.3)',  dot: '#f59e0b', pulse: false },
+  DOWN: { label: 'One or more systems down',bg: 'rgba(239,68,68,0.12)',   color: '#ef4444', border: 'rgba(239,68,68,0.3)',   dot: '#ef4444', pulse: false },
 }
 
 export default function Header({ tab, onTab, status, generating, reportExists, onRefresh, onGenerate }: Props) {
@@ -34,6 +34,7 @@ export default function Header({ tab, onTab, status, generating, reportExists, o
       <div style={{
         height: 56,
         background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
         boxShadow: 'var(--shadow-header)',
         display: 'flex', alignItems: 'center',
         padding: '0 28px', gap: 12,
@@ -41,16 +42,16 @@ export default function Header({ tab, onTab, status, generating, reportExists, o
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 34" width="34" height="34" style={{ flexShrink: 0 }}>
-            <polygon points="16,2 28,8 28,22 16,28 4,22 4,8" fill="none" stroke="#2563eb" strokeWidth="1.8" />
+            <polygon points="16,2 28,8 28,22 16,28 4,22 4,8" fill="none" stroke="#00e5a0" strokeWidth="1.8" />
             <path d="M11 9 C16 13,14 17,20 20 M20 9 C15 13,17 17,11 20"
-              stroke="#2563eb" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-            <circle cx="16" cy="15" r="2.2" fill="#2563eb" />
+              stroke="#00e5a0" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+            <circle cx="16" cy="15" r="2.2" fill="#00e5a0" />
           </svg>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 18, color: '#2563eb', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
-              Omni<span style={{ fontWeight: 400, color: '#111827' }}>BioAI</span>
+            <div style={{ fontWeight: 700, fontSize: 18, color: '#00e5a0', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+              Omni<span style={{ fontWeight: 400, color: 'var(--text)' }}>BioAI</span>
             </div>
-            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>Control Center</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>Control Center</div>
           </div>
         </div>
 
@@ -74,8 +75,8 @@ export default function Header({ tab, onTab, status, generating, reportExists, o
             onClick={onRefresh}
             style={{
               fontSize: 13, fontWeight: 600, padding: '7px 15px',
-              border: '1px solid #d1d5db', borderRadius: 8,
-              background: 'white', color: '#374151',
+              border: '1px solid var(--border)', borderRadius: 8,
+              background: 'transparent', color: 'var(--muted)',
               display: 'inline-flex', alignItems: 'center', gap: 6,
             }}
           >
@@ -88,8 +89,8 @@ export default function Header({ tab, onTab, status, generating, reportExists, o
             style={{
               fontSize: 13, fontWeight: 600, padding: '7px 15px',
               border: 'none', borderRadius: 8,
-              background: generating ? '#93c5fd' : '#2563eb',
-              color: 'white',
+              background: generating ? 'rgba(0,229,160,0.4)' : '#00e5a0',
+              color: '#000',
               display: 'inline-flex', alignItems: 'center', gap: 6,
               cursor: generating ? 'not-allowed' : 'pointer',
             }}
@@ -97,7 +98,7 @@ export default function Header({ tab, onTab, status, generating, reportExists, o
             {generating && (
               <span style={{
                 width: 12, height: 12,
-                border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white',
+                border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000',
                 borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0,
               }} />
             )}
@@ -111,8 +112,8 @@ export default function Header({ tab, onTab, status, generating, reportExists, o
               rel="noopener noreferrer"
               style={{
                 fontSize: 13, fontWeight: 600, padding: '7px 15px',
-                border: '1px solid #bfdbfe', borderRadius: 8,
-                background: '#eff6ff', color: '#1d4ed8',
+                border: '1px solid rgba(0,229,160,0.3)', borderRadius: 8,
+                background: 'rgba(0,229,160,0.08)', color: '#00e5a0',
                 display: 'inline-flex', alignItems: 'center', gap: 4,
               }}
             >
@@ -138,9 +139,9 @@ export default function Header({ tab, onTab, status, generating, reportExists, o
               padding: '0 18px',
               fontSize: 13,
               fontWeight: tab === t.id ? 600 : 400,
-              color: tab === t.id ? '#2563eb' : '#6b7280',
+              color: tab === t.id ? '#00e5a0' : 'var(--muted)',
               background: 'none', border: 'none',
-              borderBottom: tab === t.id ? '2px solid #2563eb' : '2px solid transparent',
+              borderBottom: tab === t.id ? '2px solid #00e5a0' : '2px solid transparent',
               cursor: 'pointer',
               transition: 'color 0.1s',
               marginBottom: -1,

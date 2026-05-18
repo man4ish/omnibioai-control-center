@@ -55,7 +55,7 @@ def _normalize_sif_stem(stem: str) -> str:
 def get_containers() -> JSONResponse:
     try:
         result = subprocess.run(
-            ["docker", "ps", "-a", "--format", "{{json .}}"],
+            ["docker", "ps", "--format", "{{json .}}"],
             capture_output=True, text=True, timeout=30,
         )
         containers: list[dict] = []
@@ -66,12 +66,14 @@ def get_containers() -> JSONResponse:
                     containers.append(json.loads(line))
                 except json.JSONDecodeError:
                     pass
-        running = sum(
-            1 for c in containers
-            if c.get("State", "") == "running" or str(c.get("Status", "")).startswith("Up")
+        stopped_result = subprocess.run(
+            ["docker", "ps", "-a", "-q", "--filter", "status=exited",
+             "--filter", "status=created", "--filter", "status=paused",
+             "--filter", "status=dead"],
+            capture_output=True, text=True, timeout=30,
         )
-        stopped = len(containers) - running
-        return JSONResponse({"containers": containers, "running": running, "stopped": stopped})
+        stopped = len([l for l in stopped_result.stdout.strip().splitlines() if l.strip()])
+        return JSONResponse({"containers": containers, "running": len(containers), "stopped": stopped})
     except FileNotFoundError:
         return JSONResponse({"error": "docker not found", "containers": [], "running": 0, "stopped": 0}, status_code=503)
     except Exception as e:

@@ -24,7 +24,7 @@ services:
     ui_url: http://192.168.86.234:8000
   lims:
     type: http
-    url: http://lims:7000/
+    url: http://lims:7000/accounts/login/
     timeout_s: 2
     ui_url: http://192.168.86.234:7000
   model-registry:

@@ -385,7 +385,7 @@ def _run_report_job() -> None:
     cmd = [
         "python3", str(script),
         "--root", str(workspace),
-        "--control-center-url", f"http://127.0.0.1:{os.environ.get('CONTROL_CENTER_PORT', '7070')}",
+        "--health-url", f"http://192.168.86.234:{os.environ.get('CONTROL_CENTER_PORT', '7070')}",
     ]
 
     try:
@@ -418,6 +418,19 @@ def report_generate() -> JSONResponse:
     thread = threading.Thread(target=_run_report_job, daemon=True)
     thread.start()
     return JSONResponse({"status": "started"})
+
+
+@app.get("/report/data")
+def report_data() -> JSONResponse:
+    """Return structured JSON data for the React frontend (projects, languages, coverage)."""
+    data_path = _workspace_root() / "out" / "reports" / "report_data.json"
+    if not data_path.exists():
+        return JSONResponse({"error": "No report data yet. Generate the report first."}, status_code=404)
+    try:
+        import json as _json
+        return JSONResponse(_json.loads(data_path.read_text(encoding="utf-8")))
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.get("/report/status")
@@ -751,7 +764,7 @@ def dashboard() -> str:
     .progress-msg.err { color:#dc2626; }
     .svc-table { width:100%; border-collapse:collapse; }
     .svc-table th { font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.07em; padding:9px 14px; border-bottom:1px solid #f3f4f6; text-align:left; background:#fafafa; white-space:nowrap; }
-    .svc-table td { font-size:12px; color:#374151; padding:10px 14px; border-bottom:1px solid #f9fafb; vertical-align:middle; }
+    .svc-table td { font-size:13px; color:#374151; padding:10px 14px; border-bottom:1px solid #f9fafb; vertical-align:middle; }
     .svc-table tr:last-child td { border-bottom:none; }
     .svc-table tr:hover td { background:#fafafa; }
     .svc-name { font-weight:700; color:#111827; font-size:13px; white-space:nowrap; }
@@ -780,7 +793,7 @@ def dashboard() -> str:
     .stat-pill { font-size:12px; font-weight:600; padding:4px 12px; border-radius:99px; background:#f3f4f6; border:1px solid #e5e7eb; white-space:nowrap; }
     .sif-layout { display:flex; gap:16px; align-items:flex-start; }
     .cat-sidebar { width:164px; flex-shrink:0; }
-    .cat-sidebar-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#9ca3af; margin-bottom:8px; }
+    .cat-sidebar-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#9ca3af; margin-bottom:8px; }
     .cat-btn { width:100%; text-align:left; padding:6px 10px; border-radius:6px; font-size:12px; background:transparent; color:#374151; border:1px solid transparent; font-weight:400; cursor:pointer; font-family:inherit; display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
     .cat-btn:hover { background:#f9fafb; }
     .cat-btn.active { background:#eff6ff; color:#2563eb; border-color:#bfdbfe; font-weight:600; }
@@ -922,6 +935,11 @@ def dashboard() -> str:
               <thead><tr><th>Tool</th><th>Category</th><th>Status</th><th>Size</th></tr></thead>
               <tbody id="sif-tbody"><tr><td colspan="4" class="loading-row">Loading&hellip;</td></tr></tbody>
             </table>
+          </div>
+          <div id="sif-pager" style="display:none;align-items:center;gap:8px;justify-content:center;padding:10px 0;margin-top:4px;">
+            <button id="sif-prev-btn" onclick="sifPageNav(-1)" style="padding:5px 14px;border-radius:6px;border:1px solid #2a2d3e;background:#1a1d2e;color:#9ca3af;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">&#8592; Prev</button>
+            <span id="sif-page-info" style="font-size:12px;color:#9ca3af;min-width:140px;text-align:center;"></span>
+            <button id="sif-next-btn" onclick="sifPageNav(1)" style="padding:5px 14px;border-radius:6px;border:1px solid #2a2d3e;background:#1a1d2e;color:#9ca3af;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">Next &#8594;</button>
           </div>
         </div>
       </div>
@@ -1121,7 +1139,8 @@ def dashboard() -> str:
   }
 
   /* ── docker: SIF images ─────────────────────────────────────── */
-  var _sifData=[],_sifCat=null;
+  var _sifData=[],_sifCat=null,_sifPage=0;
+  var _SIF_PER_PAGE=20;
   var CAT_COLORS={
     'alignment':['#eff6ff','#2563eb'],'assembly':['#ecfdf5','#059669'],
     'variant-calling':['#fdf4ff','#9333ea'],'rna-seq':['#fff7ed','#ea580c'],
@@ -1162,18 +1181,28 @@ def dashboard() -> str:
     document.getElementById('cat-list').innerHTML=html;
   }
 
-  function setCat(cat){_sifCat=cat;buildCatSidebar();renderSif();}
-  function filterSif(){renderSif();}
+  function setCat(cat){_sifCat=cat;_sifPage=0;buildCatSidebar();renderSif();}
+  function filterSif(){_sifPage=0;renderSif();}
+  function sifPageNav(dir){_sifPage+=dir;renderSif();}
 
   function renderSif(){
     var q=(document.getElementById('sif-search').value||'').toLowerCase();
     var filtered=_sifData.filter(function(img){
       return(!q||img.tool.toLowerCase().includes(q))&&(!_sifCat||img.category===_sifCat);
     });
-    if(!filtered.length){document.getElementById('sif-tbody').innerHTML='<tr><td colspan="4" class="loading-row">No SIF images found</td></tr>';return;}
+    var pager=document.getElementById('sif-pager');
+    if(!filtered.length){
+      document.getElementById('sif-tbody').innerHTML='<tr><td colspan="4" class="loading-row">No SIF images found</td></tr>';
+      pager.style.display='none';
+      return;
+    }
+    var total=filtered.length,pages=Math.ceil(total/_SIF_PER_PAGE);
+    if(_sifPage>=pages)_sifPage=pages-1;
+    var start=_sifPage*_SIF_PER_PAGE,end=Math.min(start+_SIF_PER_PAGE,total);
+    var pageItems=filtered.slice(start,end);
     var rows='';
-    for(var i=0;i<filtered.length;i++){
-      var img=filtered[i];
+    for(var i=0;i<pageItems.length;i++){
+      var img=pageItems[i];
       var sbg=img.exists?'#dcfce7':'#fee2e2',scol=img.exists?'#15803d':'#b91c1c',slbl=img.exists?'built':'missing';
       var sizeHtml='—';
       if(img.exists){
@@ -1182,13 +1211,26 @@ def dashboard() -> str:
         sizeHtml='<div class="sif-bar-wrap"><div class="sif-bar"><div class="sif-bar-fill" style="width:'+pct+'%"></div></div><span class="mono" style="font-size:11px;color:#6b7280;white-space:nowrap;">'+szlbl+'</span></div>';
       }
       rows+='<tr>'
-        +'<td style="font-weight:600;color:#111827;font-size:13px;padding:10px 14px;">'+esc(img.tool)+'</td>'
+        +'<td style="font-weight:600;color:#111827;padding:10px 14px;">'+esc(img.tool)+'</td>'
         +'<td style="padding:10px 14px;">'+catChip(img.category)+'</td>'
         +'<td style="padding:10px 14px;"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:'+sbg+';color:'+scol+';">'+slbl+'</span></td>'
         +'<td style="padding:10px 14px;min-width:130px;">'+sizeHtml+'</td>'
         +'</tr>';
     }
     document.getElementById('sif-tbody').innerHTML=rows;
+    if(pages>1){
+      pager.style.display='flex';
+      document.getElementById('sif-page-info').textContent='Page '+(_sifPage+1)+' of '+pages+' ('+total+' tools)';
+      var prevBtn=document.getElementById('sif-prev-btn');
+      var nextBtn=document.getElementById('sif-next-btn');
+      prevBtn.disabled=_sifPage===0;prevBtn.style.opacity=_sifPage===0?'0.35':'1';
+      prevBtn.style.borderColor=_sifPage===0?'#2a2d3e':'#2a2d3e';
+      nextBtn.disabled=_sifPage>=pages-1;nextBtn.style.opacity=_sifPage>=pages-1?'0.35':'1';
+      nextBtn.style.color=_sifPage>=pages-1?'#9ca3af':'#00e5a0';
+      prevBtn.style.color=_sifPage===0?'#9ca3af':'#00e5a0';
+    }else{
+      pager.style.display='none';
+    }
   }
 
   /* ── docker: plugin images ──────────────────────────────────── */

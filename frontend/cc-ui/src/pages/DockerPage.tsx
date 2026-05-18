@@ -8,23 +8,54 @@ type Sub = 'containers' | 'sif' | 'plugins'
 
 /* ── Shared table header / cell styles ──────────────────────── */
 const th: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, color: '#9ca3af',
+  fontSize: 10, fontWeight: 700, color: 'var(--muted)',
   textTransform: 'uppercase', letterSpacing: '0.07em',
-  padding: '9px 14px', borderBottom: '1px solid #f3f4f6',
-  textAlign: 'left', background: '#fafafa', whiteSpace: 'nowrap',
+  padding: '9px 14px', borderBottom: '1px solid var(--border)',
+  textAlign: 'left', background: 'rgba(255,255,255,0.03)', whiteSpace: 'nowrap',
 }
 const td: React.CSSProperties = {
-  fontSize: 12, color: '#374151',
-  padding: '10px 14px', borderBottom: '1px solid #f9fafb',
+  fontSize: 12, color: 'var(--text2)',
+  padding: '10px 14px', borderBottom: '1px solid var(--border)',
   verticalAlign: 'middle',
 }
 const card: React.CSSProperties = {
-  background: 'white', border: '1px solid var(--border)',
+  background: 'var(--surface)', border: '1px solid var(--border)',
   borderRadius: 'var(--radius)', overflow: 'hidden', boxShadow: 'var(--shadow-card)',
 }
 const cardHead: React.CSSProperties = {
-  padding: '11px 18px', borderBottom: '1px solid #f3f4f6',
-  background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  padding: '11px 18px', borderBottom: '1px solid var(--border)',
+  background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+}
+
+/* ── Pagination ─────────────────────────────────────────────── */
+function Pagination({ page, totalPages, onPage }: { page: number; totalPages: number; onPage: (p: number) => void }) {
+  if (totalPages <= 1) return null
+  const btnBase: React.CSSProperties = {
+    fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 6,
+    border: '1px solid var(--border)', background: 'var(--surface)',
+    cursor: 'pointer', transition: 'all 0.1s',
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '12px 0' }}>
+      <button
+        onClick={() => onPage(page - 1)}
+        disabled={page === 1}
+        style={{ ...btnBase, color: page === 1 ? 'var(--muted)' : 'var(--text2)', opacity: page === 1 ? 0.4 : 1 }}
+      >
+        ← Prev
+      </button>
+      <span style={{ fontSize: 12, color: 'var(--muted)', minWidth: 90, textAlign: 'center' }}>
+        Page <span style={{ color: 'var(--text)', fontWeight: 700 }}>{page}</span> of {totalPages}
+      </span>
+      <button
+        onClick={() => onPage(page + 1)}
+        disabled={page === totalPages}
+        style={{ ...btnBase, color: page === totalPages ? 'var(--muted)' : 'var(--text2)', opacity: page === totalPages ? 0.4 : 1 }}
+      >
+        Next →
+      </button>
+    </div>
+  )
 }
 
 /* ── Stat pill ──────────────────────────────────────────────── */
@@ -32,8 +63,8 @@ function StatPill({ label, value, color }: { label: string; value: number | stri
   return (
     <span style={{
       fontSize: 12, fontWeight: 600, padding: '4px 12px',
-      borderRadius: 99, background: '#f3f4f6',
-      color: color ?? '#374151', border: '1px solid #e5e7eb',
+      borderRadius: 99, background: 'rgba(255,255,255,0.08)',
+      color: color ?? 'var(--text2)', border: '1px solid var(--border)',
     }}>
       {value} {label}
     </span>
@@ -46,10 +77,10 @@ function ContainerBadge({ status, state }: { status: string; state?: string }) {
   const isRunning = s === 'running' || status.startsWith('Up')
   const isRestarting = s === 'restarting' || status.toLowerCase().includes('restart')
   const [bg, color] = isRunning
-    ? ['#dcfce7', '#15803d']
+    ? ['rgba(34,197,94,0.12)', '#22c55e']
     : isRestarting
-    ? ['#fef3c7', '#92400e']
-    : ['#fee2e2', '#b91c1c']
+    ? ['rgba(245,158,11,0.12)', '#f59e0b']
+    : ['rgba(239,68,68,0.12)', '#ef4444']
   const label = isRunning ? 'running' : isRestarting ? 'restarting' : 'stopped'
   return (
     <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99, background: bg, color, whiteSpace: 'nowrap' }}>
@@ -60,23 +91,23 @@ function ContainerBadge({ status, state }: { status: string; state?: string }) {
 
 /* ── Category chip ──────────────────────────────────────────── */
 const CAT_COLORS: Record<string, [string, string]> = {
-  alignment:           ['#eff6ff', '#2563eb'],
-  assembly:            ['#ecfdf5', '#059669'],
-  'variant-calling':   ['#fdf4ff', '#9333ea'],
-  'rna-seq':           ['#fff7ed', '#ea580c'],
-  'single-cell':       ['#f0f9ff', '#0284c7'],
-  epigenomics:         ['#fefce8', '#ca8a04'],
-  'protein-structure': ['#f5f3ff', '#7c3aed'],
-  proteomics:          ['#fff1f2', '#be123c'],
-  'population-genetics':['#f0fdf4', '#16a34a'],
-  annotation:          ['#fef3c7', '#92400e'],
-  metagenomics:        ['#ecfeff', '#0e7490'],
-  qc:                  ['#f8fafc', '#475569'],
-  imaging:             ['#fdf2f8', '#be185d'],
-  genomics:            ['#eff6ff', '#1d4ed8'],
+  alignment:            ['rgba(0,148,255,0.12)',   '#0094ff'],
+  assembly:             ['rgba(34,197,94,0.12)',   '#22c55e'],
+  'variant-calling':    ['rgba(168,85,247,0.12)',  '#a855f7'],
+  'rna-seq':            ['rgba(245,158,11,0.12)',  '#f59e0b'],
+  'single-cell':        ['rgba(2,132,199,0.12)',   '#0094ff'],
+  epigenomics:          ['rgba(245,158,11,0.12)',  '#f59e0b'],
+  'protein-structure':  ['rgba(124,58,237,0.12)',  '#a855f7'],
+  proteomics:           ['rgba(239,68,68,0.12)',   '#ef4444'],
+  'population-genetics':['rgba(34,197,94,0.12)',   '#22c55e'],
+  annotation:           ['rgba(245,158,11,0.12)',  '#f59e0b'],
+  metagenomics:         ['rgba(14,116,144,0.12)',  '#0094ff'],
+  qc:                   ['rgba(107,114,128,0.12)', '#9ca3af'],
+  imaging:              ['rgba(239,68,68,0.12)',   '#ef4444'],
+  genomics:             ['rgba(0,148,255,0.12)',   '#0094ff'],
 }
 function getCatColors(cat: string): [string, string] {
-  return CAT_COLORS[cat] ?? ['#f3f4f6', '#6b7280']
+  return CAT_COLORS[cat] ?? ['rgba(107,114,128,0.12)', '#9ca3af']
 }
 function CategoryChip({ category }: { category: string }) {
   const [bg, color] = getCatColors(category)
@@ -90,36 +121,68 @@ function CategoryChip({ category }: { category: string }) {
 /* ── Error / Loading ────────────────────────────────────────── */
 function ErrBox({ msg }: { msg: string }) {
   return (
-    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius)', padding: '10px 14px', color: '#dc2626', fontSize: 12, marginBottom: 16 }}>
+    <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 'var(--radius)', padding: '10px 14px', color: 'var(--red)', fontSize: 12, marginBottom: 16 }}>
       {msg}
     </div>
   )
 }
 function Loading({ msg }: { msg: string }) {
-  return <div style={{ textAlign: 'center', padding: 32, color: '#9ca3af', fontSize: 12 }}>{msg}</div>
+  return <div style={{ textAlign: 'center', padding: 32, color: 'var(--muted)', fontSize: 12 }}>{msg}</div>
+}
+
+/* ── Category sidebar button ────────────────────────────────── */
+function CatButton({ cat, count, active, onClick }: { cat: string; count: number; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', textAlign: 'left',
+        padding: '6px 10px', borderRadius: 6, fontSize: 12,
+        background: active ? 'rgba(0,229,160,0.1)' : 'transparent',
+        color: active ? '#00e5a0' : 'var(--muted)',
+        border: active ? '1px solid rgba(0,229,160,0.25)' : '1px solid transparent',
+        fontWeight: active ? 600 : 400, marginBottom: 2,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        cursor: 'pointer',
+      }}
+    >
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</span>
+      <span style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--muted)', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '1px 6px', flexShrink: 0, marginLeft: 4 }}>
+        {count}
+      </span>
+    </button>
+  )
 }
 
 /* ── A: Platform Containers ─────────────────────────────────── */
+const CONT_PAGE_SIZE = 15
+
 function ContainersSection({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<ContainersResponse | null>(null)
   const [err, setErr]   = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     setLoading(true)
+    setPage(1)
     fetchContainers()
       .then(d => { setData(d); setErr(null) })
       .catch(e => setErr(String(e)))
       .finally(() => setLoading(false))
   }, [refreshKey])
 
+  const containers = data?.containers ?? []
+  const totalPages = Math.ceil(containers.length / CONT_PAGE_SIZE)
+  const pageRows = containers.slice((page - 1) * CONT_PAGE_SIZE, page * CONT_PAGE_SIZE)
+
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         {data && (
           <>
-            <StatPill label="running" value={data.running} color="#059669" />
-            <StatPill label="stopped" value={data.stopped} color="#dc2626" />
+            <StatPill label="running" value={data.running} color="#22c55e" />
+            <StatPill label="stopped" value={data.stopped} color="#ef4444" />
           </>
         )}
       </div>
@@ -127,45 +190,53 @@ function ContainersSection({ refreshKey }: { refreshKey: number }) {
       {loading ? <Loading msg="Loading containers…" /> : (
         <div style={card}>
           <div style={cardHead}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Platform Containers</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Platform Containers</span>
+            {containers.length > 0 && (
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                {containers.length} total
+              </span>
+            )}
           </div>
-          {!data?.containers?.length ? (
-            <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>
+          {!containers.length ? (
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
               {data?.error ? `Error: ${data.error}` : 'No containers found — is Docker running?'}
             </div>
           ) : (
-            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={th}>Container</th>
-                  <th style={th}>Image</th>
-                  <th style={th}>Status</th>
-                  <th style={th}>Uptime</th>
-                  <th style={th}>Ports</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.containers.map((c, i) => (
-                  <tr key={i}>
-                    <td style={{ ...td, fontWeight: 600, color: '#111827', whiteSpace: 'nowrap' }}>
-                      {(c.Names ?? '').replace(/^\//, '') || '—'}
-                    </td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: 11, color: '#6b7280', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {c.Image || '—'}
-                    </td>
-                    <td style={td}>
-                      <ContainerBadge status={c.Status ?? ''} state={c.State} />
-                    </td>
-                    <td style={{ ...td, fontSize: 11, color: '#9ca3af', whiteSpace: 'nowrap' }}>
-                      {c.RunningFor || '—'}
-                    </td>
-                    <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: 11, color: '#6b7280', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {c.Ports || '—'}
-                    </td>
+            <>
+              <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={th}>Container</th>
+                    <th style={th}>Image</th>
+                    <th style={th}>Status</th>
+                    <th style={th}>Uptime</th>
+                    <th style={th}>Ports</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {pageRows.map((c, i) => (
+                    <tr key={i}>
+                      <td style={{ ...td, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                        {(c.Names ?? '').replace(/^\//, '') || '—'}
+                      </td>
+                      <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {c.Image || '—'}
+                      </td>
+                      <td style={td}>
+                        <ContainerBadge status={c.Status ?? ''} state={c.State} />
+                      </td>
+                      <td style={{ ...td, fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                        {c.RunningFor || '—'}
+                      </td>
+                      <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {c.Ports || '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Pagination page={page} totalPages={totalPages} onPage={setPage} />
+            </>
           )}
         </div>
       )}
@@ -174,20 +245,27 @@ function ContainersSection({ refreshKey }: { refreshKey: number }) {
 }
 
 /* ── B: Tool SIF Images ─────────────────────────────────────── */
+const SIF_PAGE_SIZE = 20
+
 function SifImagesSection({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<SifImagesResponse | null>(null)
   const [err, setErr]   = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selCat, setSelCat] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     setLoading(true)
+    setPage(1)
     fetchSifImages()
       .then(d => { setData(d); setErr(null) })
       .catch(e => setErr(String(e)))
       .finally(() => setLoading(false))
   }, [refreshKey])
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => { setPage(1) }, [search, selCat])
 
   const images = data?.images ?? []
 
@@ -203,14 +281,17 @@ function SifImagesSection({ refreshKey }: { refreshKey: number }) {
     return matchSearch && matchCat
   })
 
+  const totalPages = Math.ceil(filtered.length / SIF_PAGE_SIZE)
+  const pageRows = filtered.slice((page - 1) * SIF_PAGE_SIZE, page * SIF_PAGE_SIZE)
+
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         {data && (
           <>
-            <StatPill label="built"    value={data.built}     color="#059669" />
-            <StatPill label="missing"  value={data.missing}   color="#dc2626" />
-            <StatPill label="GB total" value={`${data.total_gb}`} color="#2563eb" />
+            <StatPill label="built"    value={data.built}     color="#22c55e" />
+            <StatPill label="missing"  value={data.missing}   color="#ef4444" />
+            <StatPill label="GB total" value={`${data.total_gb}`} color="#0094ff" />
           </>
         )}
       </div>
@@ -219,99 +300,93 @@ function SifImagesSection({ refreshKey }: { refreshKey: number }) {
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           {/* Category sidebar */}
           <div style={{ width: 168, flexShrink: 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#9ca3af', marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--muted)', marginBottom: 8 }}>
               Categories
             </div>
             {[['All', images.length] as [string, number], ...catList].map(([cat, count]) => {
               const isAll = cat === 'All'
               const active = isAll ? !selCat : selCat === cat
               return (
-                <button
+                <CatButton
                   key={cat}
+                  cat={cat}
+                  count={count}
+                  active={active}
                   onClick={() => setSelCat(isAll ? null : (selCat === cat ? null : cat))}
-                  style={{
-                    width: '100%', textAlign: 'left',
-                    padding: '6px 10px', borderRadius: 6, fontSize: 12,
-                    background: active ? '#eff6ff' : 'transparent',
-                    color: active ? '#2563eb' : '#374151',
-                    border: active ? '1px solid #bfdbfe' : '1px solid transparent',
-                    fontWeight: active ? 600 : 400, marginBottom: 2,
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</span>
-                  <span style={{ background: '#e5e7eb', color: '#6b7280', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '1px 6px', flexShrink: 0, marginLeft: 4 }}>
-                    {count}
-                  </span>
-                </button>
+                />
               )
             })}
           </div>
 
           {/* Search + table */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search tools…"
                 style={{ width: '100%', maxWidth: 300 }}
               />
+              <span style={{ fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                {filtered.length} results
+              </span>
             </div>
             <div style={card}>
               {!filtered.length ? (
-                <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>
+                <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
                   No SIF images found
                 </div>
               ) : (
-                <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <th style={th}>Tool</th>
-                      <th style={th}>Category</th>
-                      <th style={th}>Status</th>
-                      <th style={th}>Size</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((img, i) => (
-                      <tr key={i}>
-                        <td style={{ ...td, fontWeight: 600, color: '#111827' }}>{img.tool}</td>
-                        <td style={td}><CategoryChip category={img.category} /></td>
-                        <td style={td}>
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
-                            background: img.exists ? '#dcfce7' : '#fee2e2',
-                            color: img.exists ? '#15803d' : '#b91c1c',
-                          }}>
-                            {img.exists ? 'built' : 'missing'}
-                          </span>
-                        </td>
-                        <td style={{ ...td, minWidth: 130 }}>
-                          {img.exists ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <div style={{ width: 60, height: 4, background: '#e5e7eb', borderRadius: 99, overflow: 'hidden', flexShrink: 0 }}>
-                                <div style={{
-                                  height: '100%',
-                                  width: `${Math.min(100, (img.size_mb / 5120) * 100)}%`,
-                                  background: '#2563eb', borderRadius: 99,
-                                }} />
-                              </div>
-                              <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: '#6b7280', whiteSpace: 'nowrap' }}>
-                                {img.size_mb >= 1024
-                                  ? `${(img.size_mb / 1024).toFixed(1)} GB`
-                                  : `${img.size_mb} MB`}
-                              </span>
-                            </div>
-                          ) : (
-                            <span style={{ color: '#d1d5db', fontSize: 11 }}>—</span>
-                          )}
-                        </td>
+                <>
+                  <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={th}>Tool</th>
+                        <th style={th}>Category</th>
+                        <th style={th}>Status</th>
+                        <th style={th}>Size</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {pageRows.map((img, i) => (
+                        <tr key={i}>
+                          <td style={{ ...td, fontWeight: 600, color: 'var(--text)' }}>{img.tool}</td>
+                          <td style={td}><CategoryChip category={img.category} /></td>
+                          <td style={td}>
+                            <span style={{
+                              fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
+                              background: img.exists ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                              color: img.exists ? '#22c55e' : '#ef4444',
+                            }}>
+                              {img.exists ? 'built' : 'missing'}
+                            </span>
+                          </td>
+                          <td style={{ ...td, minWidth: 130 }}>
+                            {img.exists ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 60, height: 4, background: 'var(--border)', borderRadius: 99, overflow: 'hidden', flexShrink: 0 }}>
+                                  <div style={{
+                                    height: '100%',
+                                    width: `${Math.min(100, (img.size_mb / 5120) * 100)}%`,
+                                    background: '#0094ff', borderRadius: 99,
+                                  }} />
+                                </div>
+                                <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                                  {img.size_mb >= 1024
+                                    ? `${(img.size_mb / 1024).toFixed(1)} GB`
+                                    : `${img.size_mb} MB`}
+                                </span>
+                              </div>
+                            ) : (
+                              <span style={{ color: 'var(--muted)', fontSize: 11 }}>—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <Pagination page={page} totalPages={totalPages} onPage={setPage} />
+                </>
               )}
             </div>
           </div>
@@ -322,6 +397,8 @@ function SifImagesSection({ refreshKey }: { refreshKey: number }) {
 }
 
 /* ── C: Plugin Docker Images ────────────────────────────────── */
+const PLUGIN_PAGE_SIZE = 20
+
 function PluginsSection({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<PluginImagesResponse | null>(null)
   const [err, setErr]   = useState<string | null>(null)
@@ -329,14 +406,19 @@ function PluginsSection({ refreshKey }: { refreshKey: number }) {
   const [search, setSearch] = useState('')
   const [selCat, setSelCat] = useState<string | null>(null)
   const [showMissingOnly, setShowMissingOnly] = useState(false)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     setLoading(true)
+    setPage(1)
     fetchPluginImages()
       .then(d => { setData(d); setErr(null) })
       .catch(e => setErr(String(e)))
       .finally(() => setLoading(false))
   }, [refreshKey])
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => { setPage(1) }, [search, selCat, showMissingOnly])
 
   const plugins = data?.plugins ?? []
 
@@ -353,14 +435,17 @@ function PluginsSection({ refreshKey }: { refreshKey: number }) {
     return matchSearch && matchCat && matchStatus
   })
 
+  const totalPages = Math.ceil(filtered.length / PLUGIN_PAGE_SIZE)
+  const pageRows = filtered.slice((page - 1) * PLUGIN_PAGE_SIZE, page * PLUGIN_PAGE_SIZE)
+
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {data && (
           <>
             <StatPill label="plugins" value={plugins.length} />
-            <StatPill label="present" value={data.present} color="#059669" />
-            <StatPill label="missing" value={data.missing} color="#dc2626" />
+            <StatPill label="present" value={data.present} color="#22c55e" />
+            <StatPill label="missing" value={data.missing} color="#ef4444" />
           </>
         )}
       </div>
@@ -369,32 +454,20 @@ function PluginsSection({ refreshKey }: { refreshKey: number }) {
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           {/* Category sidebar */}
           <div style={{ width: 168, flexShrink: 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#9ca3af', marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--muted)', marginBottom: 8 }}>
               Categories
             </div>
             {[['All', plugins.length] as [string, number], ...catList].map(([cat, count]) => {
               const isAll = cat === 'All'
               const active = isAll ? !selCat : selCat === cat
               return (
-                <button
+                <CatButton
                   key={cat}
+                  cat={cat}
+                  count={count}
+                  active={active}
                   onClick={() => setSelCat(isAll ? null : (selCat === cat ? null : cat))}
-                  style={{
-                    width: '100%', textAlign: 'left',
-                    padding: '6px 10px', borderRadius: 6, fontSize: 12,
-                    background: active ? '#eff6ff' : 'transparent',
-                    color: active ? '#2563eb' : '#374151',
-                    border: active ? '1px solid #bfdbfe' : '1px solid transparent',
-                    fontWeight: active ? 600 : 400, marginBottom: 2,
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</span>
-                  <span style={{ background: '#e5e7eb', color: '#6b7280', borderRadius: 99, fontSize: 10, fontWeight: 700, padding: '1px 6px', flexShrink: 0, marginLeft: 4 }}>
-                    {count}
-                  </span>
-                </button>
+                />
               )
             })}
           </div>
@@ -408,55 +481,61 @@ function PluginsSection({ refreshKey }: { refreshKey: number }) {
                 placeholder="Search plugins…"
                 style={{ maxWidth: 260 }}
               />
-              <label style={{ fontSize: 12, color: '#374151', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+              <label style={{ fontSize: 12, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
                 <input type="checkbox" checked={showMissingOnly} onChange={e => setShowMissingOnly(e.target.checked)} />
                 Missing only
               </label>
+              <span style={{ fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap', marginLeft: 'auto' }}>
+                {filtered.length} results
+              </span>
             </div>
             <div style={card}>
               {!filtered.length ? (
-                <div style={{ padding: 24, textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>
+                <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
                   No plugins match the current filters
                 </div>
               ) : (
-                <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <th style={th}>Plugin</th>
-                      <th style={th}>Category</th>
-                      <th style={th}>Image</th>
-                      <th style={th}>Local Status</th>
-                      <th style={th}>Size</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((p, i) => (
-                      <tr key={i}>
-                        <td style={{ ...td, fontWeight: 600, color: '#111827', whiteSpace: 'nowrap' }}>{p.name}</td>
-                        <td style={td}><CategoryChip category={p.category} /></td>
-                        <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: 11, color: '#6b7280', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {p.image}
-                        </td>
-                        <td style={td}>
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
-                            background: p.local_status === 'present' ? '#dcfce7' : '#fee2e2',
-                            color: p.local_status === 'present' ? '#15803d' : '#b91c1c',
-                          }}>
-                            {p.local_status}
-                          </span>
-                        </td>
-                        <td style={{ ...td, fontSize: 11, fontFamily: 'var(--mono)', color: '#6b7280', whiteSpace: 'nowrap' }}>
-                          {p.local_status === 'present' && p.size_mb > 0
-                            ? p.size_mb >= 1024
-                              ? `${(p.size_mb / 1024).toFixed(1)} GB`
-                              : `${p.size_mb} MB`
-                            : '—'}
-                        </td>
+                <>
+                  <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={th}>Plugin</th>
+                        <th style={th}>Category</th>
+                        <th style={th}>Image</th>
+                        <th style={th}>Local Status</th>
+                        <th style={th}>Size</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {pageRows.map((p, i) => (
+                        <tr key={i}>
+                          <td style={{ ...td, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap' }}>{p.name}</td>
+                          <td style={td}><CategoryChip category={p.category} /></td>
+                          <td style={{ ...td, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {p.image}
+                          </td>
+                          <td style={td}>
+                            <span style={{
+                              fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
+                              background: p.local_status === 'present' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                              color: p.local_status === 'present' ? '#22c55e' : '#ef4444',
+                            }}>
+                              {p.local_status}
+                            </span>
+                          </td>
+                          <td style={{ ...td, fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                            {p.local_status === 'present' && p.size_mb > 0
+                              ? p.size_mb >= 1024
+                                ? `${(p.size_mb / 1024).toFixed(1)} GB`
+                                : `${p.size_mb} MB`
+                              : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <Pagination page={page} totalPages={totalPages} onPage={setPage} />
+                </>
               )}
             </div>
           </div>
@@ -480,8 +559,8 @@ export default function DockerPage({ refreshKey }: { refreshKey: number }) {
     <div>
       {/* Hero */}
       <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Docker Images</h1>
-        <p style={{ fontSize: 13, color: '#6b7280' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Docker Images</h1>
+        <p style={{ fontSize: 13, color: 'var(--muted)' }}>
           Platform containers, tool SIF images, and plugin Docker images
         </p>
       </div>
@@ -495,9 +574,9 @@ export default function DockerPage({ refreshKey }: { refreshKey: number }) {
             style={{
               padding: '10px 16px', fontSize: 13,
               fontWeight: sub === t.id ? 600 : 400,
-              color: sub === t.id ? '#2563eb' : '#6b7280',
+              color: sub === t.id ? '#00e5a0' : 'var(--muted)',
               background: 'none', border: 'none',
-              borderBottom: sub === t.id ? '2px solid #2563eb' : '2px solid transparent',
+              borderBottom: sub === t.id ? '2px solid #00e5a0' : '2px solid transparent',
               cursor: 'pointer', marginBottom: -1, transition: 'color 0.1s',
             }}
           >

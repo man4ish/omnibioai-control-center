@@ -6,10 +6,10 @@ interface Props { refreshKey: number }
 
 /* ── KPI Card ───────────────────────────────────────────────── */
 const KPI_TOP: Record<string, string> = {
-  gray: '#d1d5db', green: '#10b981', red: '#ef4444', amber: '#f59e0b', blue: '#2563eb',
+  gray: '#6b7280', green: '#22c55e', red: '#ef4444', amber: '#f59e0b', blue: '#0094ff',
 }
 const KPI_VAL: Record<string, string> = {
-  gray: '#111827', green: '#059669', red: '#dc2626', amber: '#d97706', blue: '#2563eb',
+  gray: '#ffffff', green: '#22c55e', red: '#ef4444', amber: '#f59e0b', blue: '#0094ff',
 }
 
 function KpiCard({ label, value, sub, color }: {
@@ -19,16 +19,16 @@ function KpiCard({ label, value, sub, color }: {
     <div style={{
       background: 'var(--surface)', border: '1px solid var(--border)',
       borderRadius: 'var(--radius)', padding: '16px 18px',
-      position: 'relative', overflow: 'hidden', boxShadow: 'var(--shadow-card)',
+      position: 'relative', overflow: 'hidden',
     }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: KPI_TOP[color] }} />
-      <div style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
         {label}
       </div>
       <div style={{ fontSize: 28, fontWeight: 700, color: KPI_VAL[color], lineHeight: 1, marginBottom: 3 }}>
         {value}
       </div>
-      <div style={{ fontSize: 11, color: '#9ca3af' }}>{sub}</div>
+      <div style={{ fontSize: 11, color: 'var(--muted)' }}>{sub}</div>
     </div>
   )
 }
@@ -36,11 +36,13 @@ function KpiCard({ label, value, sub, color }: {
 /* ── Type Pill ──────────────────────────────────────────────── */
 function TypePill({ type }: { type: string }) {
   const s: Record<string, [string, string]> = {
-    http:  ['#eff6ff', '#2563eb'],
-    mysql: ['rgba(124,58,237,0.08)', '#7c3aed'],
-    redis: ['#fef2f2', '#dc2626'],
+    http:  ['rgba(0,148,255,0.12)',   '#0094ff'],
+    mysql: ['rgba(168,85,247,0.12)',  '#a855f7'],
+    redis: ['rgba(239,68,68,0.12)',   '#ef4444'],
+    tcp:   ['rgba(245,158,11,0.12)',  '#f59e0b'],
+    disk:  ['rgba(107,114,128,0.12)', '#9ca3af'],
   }
-  const [bg, color] = s[type] ?? ['#f3f4f6', '#6b7280']
+  const [bg, color] = s[type] ?? ['rgba(107,114,128,0.12)', '#9ca3af']
   return (
     <span style={{
       fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5,
@@ -54,9 +56,9 @@ function TypePill({ type }: { type: string }) {
 /* ── Status Badge ───────────────────────────────────────────── */
 function StatusBadge({ status }: { status: 'UP' | 'WARN' | 'DOWN' }) {
   const cfg = {
-    UP:   { bg: '#dcfce7', color: '#15803d' },
-    WARN: { bg: '#fef3c7', color: '#92400e' },
-    DOWN: { bg: '#fee2e2', color: '#b91c1c' },
+    UP:   { bg: 'rgba(34,197,94,0.12)',  color: '#22c55e' },
+    WARN: { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b' },
+    DOWN: { bg: 'rgba(239,68,68,0.12)',  color: '#ef4444' },
   }[status]
   return (
     <span style={{
@@ -72,7 +74,7 @@ function StatusBadge({ status }: { status: 'UP' | 'WARN' | 'DOWN' }) {
 function ServicesTable({ services }: { services: ServiceResult[] }) {
   if (!services.length) {
     return (
-      <div style={{ textAlign: 'center', padding: 24, color: '#9ca3af', fontSize: 12 }}>
+      <div style={{ textAlign: 'center', padding: 24, color: 'var(--muted)', fontSize: 12 }}>
         No services configured
       </div>
     )
@@ -89,28 +91,28 @@ function ServicesTable({ services }: { services: ServiceResult[] }) {
       <tbody>
         {services.map(svc => (
           <tr key={svc.name}>
-            <td style={{ fontWeight: 700, color: '#111827', fontSize: 13, whiteSpace: 'nowrap' }}>
+            <td style={{ fontWeight: 700, color: 'var(--text)', fontSize: 13, whiteSpace: 'nowrap' }}>
               {svc.name}
             </td>
             <td><TypePill type={svc.type || '—'} /></td>
             <td style={{
-              fontFamily: 'var(--mono)', fontSize: 11, color: '#9ca3af',
+              fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)',
               maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {svc.target || '—'}
             </td>
             <td style={{ fontFamily: 'var(--mono)', fontSize: 11, whiteSpace: 'nowrap' }}>
               {svc.latency_ms != null ? (
-                <span style={{ color: svc.latency_ms < 10 ? '#059669' : '#374151', fontWeight: svc.latency_ms < 10 ? 600 : 400 }}>
+                <span style={{ color: svc.latency_ms < 10 ? '#22c55e' : 'var(--text)', fontWeight: svc.latency_ms < 10 ? 600 : 400 }}>
                   {svc.latency_ms} ms
                 </span>
               ) : (
-                <span style={{ color: '#d1d5db' }}>—</span>
+                <span style={{ color: 'var(--muted)' }}>—</span>
               )}
             </td>
             <td style={{
               maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap', fontSize: 11, color: '#6b7280',
+              whiteSpace: 'nowrap', fontSize: 11, color: 'var(--muted)',
             }}>
               {svc.message || '—'}
             </td>
@@ -122,8 +124,8 @@ function ServicesTable({ services }: { services: ServiceResult[] }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    fontSize: 11, fontWeight: 600, color: '#2563eb',
-                    background: '#eff6ff', border: '1px solid #bfdbfe',
+                    fontSize: 11, fontWeight: 600, color: '#00e5a0',
+                    background: 'rgba(0,229,160,0.08)', border: '1px solid rgba(0,229,160,0.2)',
                     borderRadius: 6, padding: '3px 9px',
                     display: 'inline-block', whiteSpace: 'nowrap',
                   }}
@@ -131,7 +133,7 @@ function ServicesTable({ services }: { services: ServiceResult[] }) {
                   Open UI ↗
                 </a>
               ) : (
-                <span style={{ color: '#d1d5db', fontSize: 11 }}>—</span>
+                <span style={{ color: 'var(--muted)', fontSize: 11 }}>—</span>
               )}
             </td>
           </tr>
@@ -149,27 +151,27 @@ function DiskGrid({ disks }: { disks: DiskResult[] }) {
       {disks.map(d => {
         const m = d.message?.match(/([0-9.]+)%/)
         const freePct = m ? parseFloat(m[1]) : null
-        const borderColor = d.status === 'UP' ? '#10b981' : d.status === 'WARN' ? '#f59e0b' : '#ef4444'
-        const fillColor  = d.status === 'UP' ? '#10b981' : d.status === 'WARN' ? '#f59e0b' : '#ef4444'
-        const textColor  = d.status === 'UP' ? '#059669' : d.status === 'WARN' ? '#d97706' : '#dc2626'
+        const borderColor = d.status === 'UP' ? '#22c55e' : d.status === 'WARN' ? '#f59e0b' : '#ef4444'
+        const fillColor   = borderColor
+        const textColor   = borderColor
         return (
           <div key={d.name} style={{
-            background: '#fafafa', border: '1px solid #f3f4f6',
+            background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)',
             borderLeft: `3px solid ${borderColor}`, borderRadius: 8, padding: '12px 14px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>
                 {d.name.replace('disk:', '')}
               </div>
               <div style={{ fontSize: 12, fontWeight: 700, color: textColor }}>
                 {d.message}
               </div>
             </div>
-            <div style={{ fontSize: 10, color: '#9ca3af', marginBottom: 7, fontFamily: 'var(--mono)' }}>
+            <div style={{ fontSize: 10, color: 'var(--muted)', marginBottom: 7, fontFamily: 'var(--mono)' }}>
               {d.target}
             </div>
             {freePct != null && (
-              <div style={{ height: 5, background: '#e5e7eb', borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ height: 5, background: 'var(--border)', borderRadius: 99, overflow: 'hidden' }}>
                 <div style={{
                   height: '100%', width: `${freePct.toFixed(1)}%`,
                   background: fillColor, borderRadius: 99,
@@ -218,22 +220,22 @@ export default function HealthPage({ refreshKey }: Props) {
     <div>
       {/* Hero */}
       <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Health Dashboard</h1>
-        <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 10 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Health Dashboard</h1>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10 }}>
           OmniBioAI Ecosystem · Stateless health monitoring
         </p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <MetaPill>v0.1.0</MetaPill>
-          <MetaPill blue>auto-refreshes every 10 s</MetaPill>
+          <MetaPill accent>auto-refreshes every 10 s</MetaPill>
           <MetaPill>Last checked: {ts}</MetaPill>
         </div>
       </div>
 
       {error && (
         <div style={{
-          background: '#fef2f2', border: '1px solid #fecaca',
+          background: 'var(--red-bg)', border: '1px solid var(--red-border)',
           borderRadius: 'var(--radius)', padding: '10px 14px',
-          color: '#dc2626', fontSize: 12, marginBottom: 16,
+          color: 'var(--red)', fontSize: 12, marginBottom: 16,
         }}>
           {error}
         </div>
@@ -270,14 +272,14 @@ export default function HealthPage({ refreshKey }: Props) {
       {/* Raw JSON toggle */}
       <button
         onClick={() => setRawVisible(v => !v)}
-        style={{ fontSize: 12, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0, marginBottom: 8 }}
+        style={{ fontSize: 12, color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0, marginBottom: 8 }}
       >
         {rawVisible ? 'Hide raw JSON' : 'Show raw JSON'}
       </button>
       {rawVisible && data && (
         <pre style={{
-          background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 8,
-          padding: 14, overflow: 'auto', fontSize: 11, color: '#374151', lineHeight: 1.6,
+          background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8,
+          padding: 14, overflow: 'auto', fontSize: 11, color: 'var(--text2)', lineHeight: 1.6,
         }}>
           {JSON.stringify(data, null, 2)}
         </pre>
@@ -287,13 +289,13 @@ export default function HealthPage({ refreshKey }: Props) {
 }
 
 /* ── Shared styles ──────────────────────────────────────────── */
-function MetaPill({ children, blue }: { children: React.ReactNode; blue?: boolean }) {
+function MetaPill({ children, accent }: { children: React.ReactNode; accent?: boolean }) {
   return (
     <span style={{
       fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99,
-      background: blue ? '#eff6ff' : '#f3f4f6',
-      color: blue ? '#1d4ed8' : '#6b7280',
-      border: `1px solid ${blue ? '#bfdbfe' : '#e5e7eb'}`,
+      background: accent ? 'rgba(0,229,160,0.1)'  : 'rgba(255,255,255,0.05)',
+      color:      accent ? '#00e5a0'               : 'var(--muted)',
+      border:     `1px solid ${accent ? 'rgba(0,229,160,0.25)' : 'var(--border)'}`,
     }}>
       {children}
     </span>
@@ -303,15 +305,14 @@ function MetaPill({ children, blue }: { children: React.ReactNode; blue?: boolea
 const card: React.CSSProperties = {
   background: 'var(--surface)', border: '1px solid var(--border)',
   borderRadius: 'var(--radius)', marginBottom: 16, overflow: 'hidden',
-  boxShadow: 'var(--shadow-card)',
 }
 const cardHead: React.CSSProperties = {
-  padding: '11px 18px', borderBottom: '1px solid #f3f4f6',
+  padding: '11px 18px', borderBottom: '1px solid var(--border)',
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  background: '#fafafa',
+  background: 'rgba(255,255,255,0.03)',
 }
-const cardTitle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: '#111827' }
+const cardTitle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--text)' }
 const metaPillStyle: React.CSSProperties = {
   fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99,
-  background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb',
+  background: 'rgba(255,255,255,0.05)', color: 'var(--muted)', border: '1px solid var(--border)',
 }

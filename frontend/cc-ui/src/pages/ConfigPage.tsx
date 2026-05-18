@@ -14,18 +14,18 @@ function YamlBlock({ text }: { text: string }) {
           return (
             <span key={i}>
               {indent}
-              <span style={{ color: isTop ? '#2563eb' : '#7c3aed', fontWeight: isTop ? 700 : 400 }}>{k}</span>
-              <span style={{ color: '#9ca3af' }}>{colon}</span>
-              <span style={{ color: '#059669' }}>{rest}</span>
+              <span style={{ color: isTop ? '#00e5a0' : '#a855f7', fontWeight: isTop ? 700 : 400 }}>{k}</span>
+              <span style={{ color: 'var(--muted)' }}>{colon}</span>
+              <span style={{ color: '#22c55e' }}>{rest}</span>
               {'\n'}
             </span>
           )
         }
         if (line.trimStart().startsWith('#')) {
-          return <span key={i} style={{ color: '#9ca3af', fontStyle: 'italic' }}>{line}{'\n'}</span>
+          return <span key={i} style={{ color: 'var(--muted)', fontStyle: 'italic' }}>{line}{'\n'}</span>
         }
         if (line.trimStart().startsWith('-')) {
-          return <span key={i} style={{ color: '#d97706' }}>{line}{'\n'}</span>
+          return <span key={i} style={{ color: '#f59e0b' }}>{line}{'\n'}</span>
         }
         return <span key={i}>{line}{'\n'}</span>
       })}
@@ -58,13 +58,13 @@ function AddServiceModal({ onClose, onSaved }: ModalProps) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px 22px', width: 400, boxShadow: '0 20px 60px rgba(2,6,23,0.18)' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '20px 22px', width: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-          <span style={{ fontWeight: 700, fontSize: 14 }}>Add Service</span>
-          <button onClick={onClose} style={{ fontSize: 18, color: '#9ca3af', lineHeight: 1, cursor: 'pointer' }}>×</button>
+          <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>Add Service</span>
+          <button onClick={onClose} style={{ fontSize: 18, color: 'var(--muted)', lineHeight: 1, cursor: 'pointer' }}>×</button>
         </div>
 
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -86,7 +86,7 @@ function AddServiceModal({ onClose, onSaved }: ModalProps) {
           </label>
 
           {err && (
-            <div style={{ fontSize: 11, color: '#dc2626', background: '#fef2f2', borderRadius: 'var(--radius)', padding: '6px 10px' }}>
+            <div style={{ fontSize: 11, color: 'var(--red)', background: 'var(--red-bg)', borderRadius: 'var(--radius)', padding: '6px 10px' }}>
               {err}
             </div>
           )}
@@ -95,14 +95,14 @@ function AddServiceModal({ onClose, onSaved }: ModalProps) {
             <button
               type="button"
               onClick={onClose}
-              style={{ fontSize: 12, padding: '7px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: '#f9fafb', color: '#374151', cursor: 'pointer' }}
+              style={{ fontSize: 12, padding: '7px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--surface)', color: 'var(--text2)', cursor: 'pointer' }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              style={{ fontSize: 12, fontWeight: 600, padding: '7px 16px', border: 'none', borderRadius: 'var(--radius)', background: '#2563eb', color: '#fff', cursor: 'pointer', opacity: saving ? 0.65 : 1 }}
+              style={{ fontSize: 12, fontWeight: 600, padding: '7px 16px', border: 'none', borderRadius: 'var(--radius)', background: '#00e5a0', color: '#000', cursor: 'pointer', opacity: saving ? 0.65 : 1 }}
             >
               {saving ? 'Saving…' : 'Add Service'}
             </button>
@@ -134,34 +134,34 @@ export default function ConfigPage({ refreshKey }: { refreshKey: number }) {
     <div>
       {/* Hero */}
       <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Configuration</h1>
-        <p style={{ fontSize: 13, color: '#6b7280' }}>Live configuration served from the backend</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Configuration</h1>
+        <p style={{ fontSize: 13, color: 'var(--muted)' }}>Live configuration served from the backend</p>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>control_center.yaml</div>
-          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>GET /config</div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>control_center.yaml</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>GET /config</div>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          style={{ fontSize: 12, fontWeight: 600, padding: '7px 14px', border: 'none', borderRadius: 'var(--radius)', background: '#2563eb', color: '#fff', cursor: 'pointer' }}
+          style={{ fontSize: 12, fontWeight: 600, padding: '7px 14px', border: 'none', borderRadius: 'var(--radius)', background: '#00e5a0', color: '#000', cursor: 'pointer' }}
         >
           + Add Service
         </button>
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius)', padding: '10px 14px', color: '#dc2626', fontSize: 12, marginBottom: 14 }}>
+        <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 'var(--radius)', padding: '10px 14px', color: 'var(--red)', fontSize: 12, marginBottom: 14 }}>
           {error}
         </div>
       )}
 
       {yaml != null && (
-        <div style={{ background: '#f9fafb', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
-          <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)' }}>
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#9ca3af' }}>YAML</span>
-            <span style={{ fontSize: 10, color: '#9ca3af', fontFamily: 'var(--mono)' }}>control_center.yaml</span>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
+          <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)' }}>YAML</span>
+            <span style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--mono)' }}>control_center.yaml</span>
           </div>
           <YamlBlock text={yaml} />
         </div>
@@ -175,5 +175,5 @@ export default function ConfigPage({ refreshKey }: { refreshKey: number }) {
 }
 
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 11, fontWeight: 600, color: '#374151',
+  display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text2)',
 }
