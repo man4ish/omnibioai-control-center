@@ -77,7 +77,7 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
-input::placeholder, textarea::placeholder { color: var(--muted); }
+input::placeholder, textarea::placeholder { color: var(--color-text-muted); }
 code, pre { font-family: var(--mono); }
 
 select option { background: var(--surface); color: var(--text); }
@@ -96,7 +96,7 @@ select option { background: var(--surface); color: var(--text); }
 /* ── Table ────────────────────────────────────────────────────── */
 .data-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
 .data-table th {
-  font-size: 10px; font-weight: 700; color: var(--muted);
+  font-size: 10px; font-weight: 700; color: var(--color-text-muted);
   text-transform: uppercase; letter-spacing: 0.07em;
   padding: 9px 14px; border-bottom: 1px solid var(--border);
   text-align: left; background: rgba(255,255,255,0.03); white-space: nowrap;
@@ -107,3 +107,4 @@ select option { background: var(--surface); color: var(--text); }
   vertical-align: middle;
 }
 .data-table tr:last-child td { border-bottom: none; }
+--color-text-muted: var(--muted);
