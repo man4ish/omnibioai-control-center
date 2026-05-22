@@ -24,8 +24,8 @@ services:
     ui_url: http://192.168.86.234:8000
   lims:
     type: http
-    url: http://lims:7000/accounts/login/
-    timeout_s: 2
+    url: http://192.168.86.234:7000/healthz
+    timeout_s: 5
     ui_url: http://192.168.86.234:7000
   model-registry:
     type: http
