@@ -32,6 +32,11 @@ services:
     url: http://model-registry:8095/health
     timeout_s: 2
     ui_url: http://192.168.86.234:8095
+  rag:
+    type: http
+    url: http://rag:8096/docs
+    timeout_s: 10
+    ui_url: http://192.168.86.234:8090
 system:
   disk_checks:
     - path: /workspace
