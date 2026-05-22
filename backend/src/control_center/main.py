@@ -25,6 +25,9 @@ app = FastAPI(
     version="0.1.0",
 )
 
+from prometheus_fastapi_instrumentator import Instrumentator
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
