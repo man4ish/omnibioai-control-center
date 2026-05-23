@@ -142,7 +142,7 @@ def report_generate() -> JSONResponse:
 def report_status() -> JSONResponse:
     """Poll job state. Frontend polls this every 2s while running."""
     state = _job.as_dict()
-    report_path = _workspace_root() / "out" / "reports" / "omnibioai_ecosystem_report.html"
+    report_path = _workspace_root() / "work" / "out" / "reports" / "omnibioai_ecosystem_report.html"
     state["report_exists"] = report_path.exists()
     if report_path.exists():
         mtime = datetime.fromtimestamp(report_path.stat().st_mtime, tz=timezone.utc)
@@ -159,7 +159,7 @@ def report_status() -> JSONResponse:
 
 @app.get("/", response_class=HTMLResponse)
 def root() -> HTMLResponse:
-    report_path = _workspace_root() / "out" / "reports" / "omnibioai_ecosystem_report.html"
+    report_path = _workspace_root() / "work" / "out" / "reports" / "omnibioai_ecosystem_report.html"
 
     if report_path.exists():
         report_html = report_path.read_text(encoding="utf-8")
