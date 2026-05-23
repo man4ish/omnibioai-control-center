@@ -103,7 +103,7 @@ def _run_report_job() -> None:
     cmd = [
         "python3", str(script),
         "--root", str(workspace),
-        "--health-url", f"http://192.168.86.234:{os.environ.get('CONTROL_CENTER_PORT', '7070')}",
+        "--health-url", f"http://127.0.0.1:{os.environ.get('CONTROL_CENTER_PORT', '7070')}",
     ]
 
     try:
@@ -1132,7 +1132,7 @@ def parse_summary(payload: Dict[str, Any]) -> EcosystemHealth:
 # ---------------------------------------------------------------------------
 
 def fetch_summary(
-    base_url: str = "http://192.168.86.234:7070",
+    base_url: str = "http://127.0.0.1:7070",
     timeout_s: float = 5.0,
 ) -> EcosystemHealth:
     """

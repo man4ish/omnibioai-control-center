@@ -70,19 +70,19 @@ const LANES: Lane[] = [
     id: 'workbench', label: 'workbench', color: C.teal,
     bg: 'rgba(0,229,160,0.07)', border: 'rgba(0,229,160,0.3)',
     nodes: [
-      { key: 'workbench',         name: 'workbench',         desc: 'Django · 80+ plugins', port: '8000', ui: 'http://192.168.86.234:8000' },
-      { key: 'lims',              name: 'lims',              desc: 'lab data',             port: '7000', ui: 'http://192.168.86.234:7000' },
+      { key: 'workbench',         name: 'workbench',         desc: 'Django · 80+ plugins', port: '8000', ui: 'https://app.omnibioai.org' },
+      { key: 'lims',              name: 'lims',              desc: 'lab data',             port: '7000', ui: 'https://lims.omnibioai.org' },
       { key: 'rag',               name: 'rag',               desc: 'PubMed · DeepSeek',    port: '8090', ui: null },
       { key: 'workflow-bundles',  name: 'workflow-bundles',  desc: 'WDL/Nextflow/CWL',     port: '8098', ui: null },
-      { key: 'control-center',   name: 'control-center',    desc: 'health · images',      port: '7070', ui: 'http://192.168.86.234:7070' },
+      { key: 'control-center',   name: 'control-center',    desc: 'health · images',      port: '7070', ui: 'https://control.omnibioai.org' },
     ],
   },
   {
     id: 'services', label: 'services', color: C.amber,
     bg: 'rgba(245,158,11,0.07)', border: 'rgba(245,158,11,0.3)',
     nodes: [
-      { key: 'toolserver',      name: 'toolserver',      desc: 'FastAPI bio tools', port: '9090',  ui: 'http://192.168.86.234:9090' },
-      { key: 'model-registry',  name: 'model-registry',  desc: 'ML versioning',    port: '8095',  ui: 'http://192.168.86.234:8095' },
+      { key: 'toolserver',      name: 'toolserver',      desc: 'FastAPI bio tools', port: '9090',  ui: 'https://tools.omnibioai.org' },
+      { key: 'model-registry',  name: 'model-registry',  desc: 'ML versioning',    port: '8095',  ui: 'https://models.omnibioai.org' },
       { key: 'opa',             name: 'opa',             desc: 'Open Policy Agent', port: '8181',  ui: null },
       { key: 'ollama',          name: 'ollama',          desc: 'Llama/DeepSeek',   port: '11434', ui: null },
       { key: 'videos',          name: 'videos',          desc: 'tutorials · SDK',   port: '8086',  ui: null },
@@ -92,7 +92,7 @@ const LANES: Lane[] = [
     id: 'execution', label: 'execution', color: C.purple,
     bg: 'rgba(168,85,247,0.07)', border: 'rgba(168,85,247,0.3)',
     nodes: [
-      { key: 'tes',          name: 'tes',          desc: 'Slurm/AWS/Azure/GCP', port: '8081', ui: 'http://192.168.86.234:8081' },
+      { key: 'tes',          name: 'tes',          desc: 'Slurm/AWS/Azure/GCP', port: '8081', ui: 'https://api.omnibioai.org/_svc/tes' },
       { key: 'tool-runtime', name: 'tool-runtime', desc: 'Docker/Singularity',  port: null,   ui: null },
       { key: 'tool-images',  name: 'tool-images',  desc: '80+ bio tools',       port: '8097', ui: null },
       { key: 'dev-docker',   name: 'dev-docker',   desc: 'DGX · GPU env',       port: null,   ui: null },

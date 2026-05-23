@@ -18,7 +18,7 @@ python omnibioai-control-center/scripts/generate_report.py
 Options
 -------
 --root PATH              ecosystem root (default: auto-detect)
---health-url URL         default http://192.168.86.234:7070 (alias: --control-center-url)
+--health-url URL         default http://127.0.0.1:7070 (alias: --control-center-url)
 --out RELPATH            default out/reports/omnibioai_ecosystem_report.html
 --skip-health            skip live health fetch
 --skip-coverage          skip pytest coverage collection
@@ -63,7 +63,7 @@ DEFAULT_TARGETS = [
 
 DEFAULT_OUT_RELPATH        = "out/reports/omnibioai_ecosystem_report.html"
 DEFAULT_TITLE              = "OmniBioAI Ecosystem"
-DEFAULT_CONTROL_CENTER_URL = "http://192.168.86.234:7070"
+DEFAULT_CONTROL_CENTER_URL = "http://127.0.0.1:7070"
 
 # shared color palette (matches all 5 tabs)
 COLORS = {
@@ -567,11 +567,11 @@ def architecture_section_html(project_totals: Dict[str, Totals],
   <div style="border-radius:12px;border:0.5px solid var(--c-teal-bd);background:var(--c-teal-bg);padding:10px 8px 12px">
     <div style="font-size:11px;font-weight:600;text-align:center;color:var(--c-teal);margin-bottom:8px">workbench</div>
     {"".join(_arch_node(n,d,p,u,'teal') for n,d,p,u in [
-      ('workbench','Django · 80+ plugins','8000','http://192.168.86.234:8000'),
-      ('lims','lab data','7000','http://192.168.86.234:7000'),
+      ('workbench','Django · 80+ plugins','8000','http://127.0.0.1:8000'),
+      ('lims','lab data','7000','http://127.0.0.1:7000'),
       ('rag','PubMed · DeepSeek','8090',None),
       ('workflow-bundles','WDL/Nextflow/CWL','8098',None),
-      ('control-center','health · images','7070','http://192.168.86.234:7070'),
+      ('control-center','health · images','7070','http://127.0.0.1:7070'),
     ])}
   </div>
 
@@ -579,8 +579,8 @@ def architecture_section_html(project_totals: Dict[str, Totals],
   <div style="border-radius:12px;border:0.5px solid var(--c-amber-bd);background:var(--c-amber-bg);padding:10px 8px 12px">
     <div style="font-size:11px;font-weight:600;text-align:center;color:var(--c-amber);margin-bottom:8px">services</div>
     {"".join(_arch_node(n,d,p,u,'amber') for n,d,p,u in [
-      ('toolserver','FastAPI bio tools','9090','http://192.168.86.234:9090'),
-      ('model-registry','ML versioning','8095','http://192.168.86.234:8095'),
+      ('toolserver','FastAPI bio tools','9090','http://127.0.0.1:9090'),
+      ('model-registry','ML versioning','8095','http://127.0.0.1:8095'),
       ('opa','Open Policy Agent','8181',None),
       ('ollama','Llama/DeepSeek','11434',None),
       ('videos','tutorials · SDK','8086',None),
@@ -591,7 +591,7 @@ def architecture_section_html(project_totals: Dict[str, Totals],
   <div style="border-radius:12px;border:0.5px solid var(--c-purple-bd);background:var(--c-purple-bg);padding:10px 8px 12px">
     <div style="font-size:11px;font-weight:600;text-align:center;color:var(--c-purple);margin-bottom:8px">execution</div>
     {"".join(_arch_node(n,d,p,u,'purple') for n,d,p,u in [
-      ('tes','Slurm/AWS/Azure/GCP','8081','http://192.168.86.234:8081'),
+      ('tes','Slurm/AWS/Azure/GCP','8081','http://127.0.0.1:8081'),
       ('tool-runtime','Docker/Singularity',None,None),
       ('tool-images','80+ bio tools','8097',None),
       ('dev-docker','DGX · GPU env',None,None),

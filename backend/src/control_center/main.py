@@ -388,7 +388,7 @@ def _run_report_job() -> None:
     cmd = [
         "python3", str(script),
         "--root", str(workspace),
-        "--health-url", f"http://192.168.86.234:{os.environ.get('CONTROL_CENTER_PORT', '7070')}",
+        "--health-url", f"http://127.0.0.1:{os.environ.get('CONTROL_CENTER_PORT', '7070')}",
     ]
 
     try:
