@@ -461,11 +461,11 @@ th{padding:8px 12px;font-size:11px;font-weight:600;color:#6b7280;background:#1a1
    cursor:pointer;user-select:none;text-transform:uppercase;letter-spacing:.04em}
 th:hover{color:#e2e8f0}
 th.r,td.r{text-align:right}
-td{padding:7px 12px;border-bottom:0.5px solid #2a2d3e;color:#e2e8f0;vertical-align:middle;background:#1a1d2e}
-td.mono{font-family:monospace;font-size:11px;color:#6b7280;
+td{padding:7px 12px;border-bottom:0.5px solid #2a2d3e;color:#e2e8f0 !important;vertical-align:middle;background:#1a1d2e !important}
+td.mono{font-family:monospace;font-size:11px;color:#e2e8f0 !important;
         max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#1a1d2e}
+tr:hover td{background:#1a1d2e !important}
 .filter-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .search-inp{flex:1;min-width:140px;padding:6px 10px;font-size:12px;
             border:0.5px solid #2a2d3e;border-radius:8px;background:#1a1d2e;color:#e2e8f0}
@@ -952,7 +952,7 @@ def languages_section_html(language_totals: Dict[str, Totals], grand: Totals) ->
 <div class="tab-section">
 <div class="kpi-row">
   <div class="kpi"><div class="kpi-label">languages</div><div class="kpi-val">{len(langs)}</div><div class="kpi-sub">detected by cloc</div></div>
-  <div class="kpi"><div class="kpi-label">dominant</div><div class="kpi-val">{langs[0][0] if langs else '—'}</div><div class="kpi-sub">{round(100*langs[0][1].code/total_code,1)}% of codebase</div></div>
+  <div class="kpi"><div class="kpi-label">dominant</div><div class="kpi-val">{langs[0][0] if langs else '—'}</div><div class="kpi-sub">{round(100*langs[0][1].code/total_code,1) if langs else 0}% of codebase</div></div>
   <div class="kpi"><div class="kpi-label">backend</div><div class="kpi-val">{round(100*type_totals.get('backend',0)/total_code,1)}%</div><div class="kpi-sub">Python + SQL + notebooks</div></div>
   <div class="kpi"><div class="kpi-label">frontend</div><div class="kpi-val">{round(100*type_totals.get('frontend',0)/total_code,1)}%</div><div class="kpi-sub">HTML + CSS + TS + JS</div></div>
 </div>
@@ -1553,9 +1553,9 @@ function dkCA(){{
   document.getElementById('dk-cont-tbody').innerHTML=pg.length?pg.map(function(c){{
     var name=(c.Names||'').replace(/^[/]/,'')||'—';var s=(c.State||'').toLowerCase();
     var r=s==='running'||(c.Status||'').startsWith('Up');var re=s==='restarting'||(c.Status||'').toLowerCase().includes('restart');
-    return '<tr><td style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">'+name+'</td>'+
+    return '<tr><td style="font-size:13px;font-weight:600;color:#e2e8f0 !important;white-space:nowrap">'+name+'</td>'+
       '<td class="mono">'+(c.Image||'—')+'</td><td>'+_dkBadge(r,re)+'</td>'+
-      '<td style="font-size:12px;color:#6b7280;white-space:nowrap">'+(c.RunningFor||'—')+'</td>'+
+      '<td style="font-size:12px;color:#e2e8f0 !important;white-space:nowrap">'+(c.RunningFor||'—')+'</td>'+
       '<td class="mono">'+(c.Ports||'—')+'</td></tr>';
   }}).join(''):'<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:24px 12px">No containers found</td></tr>';
   renderPg('dk-cont',_DC,dkCA);
@@ -1570,8 +1570,8 @@ function dkSA(){{
   var pg=d.slice((_DS.page-1)*_DS.pp,_DS.page*_DS.pp);
   document.getElementById('dk-sif-tbody').innerHTML=pg.length?pg.map(function(i){{
     var sb=i.exists?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)';var sc=i.exists?'#22c55e':'#ef4444';
-    var sz='—';if(i.exists){{var mb=i.size_mb,w=Math.min(100,(mb/5120)*100).toFixed(1),lbl=mb>=1024?(mb/1024).toFixed(1)+' GB':mb+' MB';sz='<div style="display:flex;align-items:center;gap:6px"><div style="width:50px;height:4px;background:#2a2d3e;border-radius:99px;overflow:hidden;flex-shrink:0"><div style="height:100%;width:'+w+'%;background:#0094ff;border-radius:99px"></div></div><span style="font-size:12px;font-family:monospace;color:#6b7280;white-space:nowrap">'+lbl+'</span></div>';}}
-    return '<tr><td style="font-size:13px;font-weight:600;color:#fff">'+i.tool+'</td>'+
+    var sz='—';if(i.exists){{var mb=i.size_mb,w=Math.min(100,(mb/5120)*100).toFixed(1),lbl=mb>=1024?(mb/1024).toFixed(1)+' GB':mb+' MB';sz='<div style="display:flex;align-items:center;gap:6px"><div style="width:50px;height:4px;background:#2a2d3e;border-radius:99px;overflow:hidden;flex-shrink:0"><div style="height:100%;width:'+w+'%;background:#0094ff;border-radius:99px"></div></div><span style="font-size:12px;font-family:monospace;color:#e2e8f0 !important;white-space:nowrap">'+lbl+'</span></div>';}}
+    return '<tr><td style="font-size:13px;font-weight:600;color:#e2e8f0 !important">'+i.tool+'</td>'+
       '<td>'+_dkChip(i.category)+'</td>'+
       '<td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:'+sb+';color:'+sc+'">'+(i.exists?'built':'missing')+'</span></td>'+
       '<td>'+sz+'</td></tr>';
@@ -1590,11 +1590,11 @@ function dkPA(){{
   document.getElementById('dk-plug-tbody').innerHTML=pg.length?pg.map(function(p){{
     var sb=p.local_status==='present'?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)';var sc=p.local_status==='present'?'#22c55e':'#ef4444';
     var sz='—';if(p.local_status==='present'&&p.size_mb>0)sz=p.size_mb>=1024?(p.size_mb/1024).toFixed(1)+' GB':p.size_mb+' MB';
-    return '<tr><td style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">'+p.name+'</td>'+
+    return '<tr><td style="font-size:13px;font-weight:600;color:#e2e8f0 !important;white-space:nowrap">'+p.name+'</td>'+
       '<td>'+_dkChip(p.category)+'</td>'+
       '<td class="mono" style="max-width:260px">'+p.image+'</td>'+
       '<td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:'+sb+';color:'+sc+'">'+p.local_status+'</span></td>'+
-      '<td style="font-size:12px;font-family:monospace;color:#6b7280;white-space:nowrap">'+sz+'</td></tr>';
+      '<td style="font-size:12px;font-family:monospace;color:#e2e8f0 !important;white-space:nowrap">'+sz+'</td></tr>';
   }}).join(''):'<tr><td colspan="5" style="text-align:center;color:#6b7280;padding:24px 12px">No plugins match filters</td></tr>';
   renderPg('dk-plug',_DP,dkPA);
 }}
@@ -1944,8 +1944,13 @@ def main() -> int:
     if args.root:
         ecosystem_root = args.root
     else:
-        cwd = Path.cwd()
-        ecosystem_root = cwd.parent if (cwd / "manage.py").exists() else cwd
+        # Derive root from script location: <root>/omnibioai-control-center/scripts/generate_report.py
+        script_candidate = Path(__file__).resolve().parent.parent.parent  # /workspace
+        if any((script_candidate / t).is_dir() for t in DEFAULT_TARGETS[:6]):
+            ecosystem_root = script_candidate
+        else:
+            cwd = Path.cwd()
+            ecosystem_root = cwd.parent if (cwd / "manage.py").exists() else cwd
     try:
         out = generate_report(
             ecosystem_root=ecosystem_root,

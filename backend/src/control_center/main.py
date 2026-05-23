@@ -101,31 +101,59 @@ _DOCKER_INJECT_JS = r"""<style>
 .omni-d-subbtn:hover { color:#374151; }
 .omni-d-subbtn.active { font-weight:600; color:#2563eb; border-bottom-color:#2563eb; }
 .omni-d-pills { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
-.omni-d-pill { font-size:12px; font-weight:600; padding:4px 12px; border-radius:99px; background:#f3f4f6; border:1px solid #e5e7eb; white-space:nowrap; }
+.omni-d-pill { font-size:12px; font-weight:600; padding:4px 12px; border-radius:99px; background:#f3f4f6; border:1px solid #e5e7eb; color:#374151; white-space:nowrap; }
 .omni-d-card { background:white; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; margin-bottom:16px; }
 .omni-d-table { width:100%; border-collapse:collapse; }
-.omni-d-table th { font-size:10px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.07em; padding:9px 14px; border-bottom:1px solid #f3f4f6; text-align:left; background:#fafafa; white-space:nowrap; }
-.omni-d-table td { font-size:12px; color:#374151; padding:10px 14px; border-bottom:1px solid #f9fafb; vertical-align:middle; }
+.omni-d-table th { font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.07em; padding:9px 14px; border-bottom:1px solid #e5e7eb; text-align:left; background:#f9fafb; white-space:nowrap; }
+.omni-d-table td { font-size:12px; color:#374151; padding:10px 14px; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
 .omni-d-table tr:last-child td { border-bottom:none; }
-.omni-d-table tr:hover td { background:#fafafa; }
+.omni-d-table tr:hover td { background:#f9fafb; }
 .omni-d-loading { text-align:center; padding:28px; color:#9ca3af; font-size:12px; }
+.omni-d-pager { display:none; align-items:center; gap:8px; justify-content:center; padding:10px 14px; border-top:1px solid #f3f4f6; background:white; }
+.omni-d-pager-btn { padding:5px 14px; border-radius:6px; border:1px solid #d1d5db; background:white; color:#374151; font-size:12px; cursor:pointer; font-family:inherit; transition:opacity .12s; }
+.omni-d-pager-btn:disabled { opacity:0.4; cursor:default; }
+.omni-d-pager-info { font-size:12px; color:#6b7280; min-width:160px; text-align:center; }
 .omni-d-sif-wrap { display:flex; gap:16px; align-items:flex-start; }
 .omni-d-sidebar { width:164px; flex-shrink:0; }
 .omni-d-sidebar-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#9ca3af; margin-bottom:8px; }
 .omni-d-catbtn { width:100%; text-align:left; padding:6px 10px; border-radius:6px; font-size:12px; background:transparent; color:#374151; border:1px solid transparent; cursor:pointer; font-family:inherit; display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
 .omni-d-catbtn:hover { background:#f9fafb; }
 .omni-d-catbtn.active { background:#eff6ff; color:#2563eb; border-color:#bfdbfe; font-weight:600; }
-.omni-d-cnt { background:#e5e7eb; color:#6b7280; border-radius:99px; font-size:10px; font-weight:700; padding:1px 6px; margin-left:4px; flex-shrink:0; }
+.omni-d-cnt { background:#e5e7eb; color:#374151; border-radius:99px; font-size:10px; font-weight:700; padding:1px 6px; margin-left:4px; flex-shrink:0; }
 .omni-d-main { flex:1; min-width:0; }
-.omni-d-search { width:100%; max-width:300px; padding:7px 11px; font-size:13px; border:1px solid #d1d5db; border-radius:8px; font-family:inherit; outline:none; display:block; margin-bottom:10px; }
+.omni-d-search { width:100%; max-width:300px; padding:7px 11px; font-size:13px; border:1px solid #d1d5db; border-radius:8px; font-family:inherit; outline:none; display:block; margin-bottom:10px; color:#374151; background:white; }
 .omni-d-search:focus { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.15); }
 </style>
 <script>
 (function() {
-  var _dLoaded = false, _dActive = 'ct', _sifData = [], _sifCat = null;
+  var _dLoaded = false, _dActive = 'ct';
+  var _ctData = [], _ctPage = 0, _CT_PP = 25;
+  var _sifData = [], _sifCat = null, _sifPage = 0, _SIF_PP = 25;
+  var _plData = [], _plPage = 0, _PL_PP = 25;
 
   function omniEsc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function omniPagerHtml(pId, navFn) {
+    return '<div id="' + pId + '" class="omni-d-pager">' +
+      '<button class="omni-d-pager-btn" id="' + pId + '-prev" onclick="' + navFn + '(-1)">&#8592; Prev</button>' +
+      '<span class="omni-d-pager-info" id="' + pId + '-info"></span>' +
+      '<button class="omni-d-pager-btn" id="' + pId + '-next" onclick="' + navFn + '(1)">Next &#8594;</button>' +
+      '</div>';
+  }
+
+  function omniUpdatePager(pId, page, pages, total, unit) {
+    var el = document.getElementById(pId);
+    if (!el) return;
+    if (pages > 1) {
+      el.style.display = 'flex';
+      document.getElementById(pId + '-info').textContent = 'Page ' + (page + 1) + ' of ' + pages + ' (' + total + ' ' + unit + ')';
+      var pb = document.getElementById(pId + '-prev'), nb = document.getElementById(pId + '-next');
+      pb.disabled = page === 0; nb.disabled = page >= pages - 1;
+    } else {
+      el.style.display = 'none';
+    }
   }
 
   function buildDockerPanel() {
@@ -140,30 +168,33 @@ _DOCKER_INJECT_JS = r"""<style>
       '</nav>' +
       '<div id="omni-d-ct">' +
         '<div id="omni-d-ct-pills" class="omni-d-pills"></div>' +
-        '<div class="omni-d-card"><table class="omni-d-table">' +
-          '<thead><tr><th>Container</th><th>Image</th><th>Status</th><th>Uptime</th><th>Ports</th></tr></thead>' +
-          '<tbody id="omni-d-ct-tbody"><tr><td colspan="5" class="omni-d-loading">Loading…</td></tr></tbody>' +
-        '</table></div>' +
+        '<div class="omni-d-card">' +
+          '<table class="omni-d-table"><thead><tr><th>Container</th><th>Image</th><th>Status</th><th>Uptime</th><th>Ports</th></tr></thead>' +
+          '<tbody id="omni-d-ct-tbody"><tr><td colspan="5" class="omni-d-loading">Loading…</td></tr></tbody></table>' +
+          omniPagerHtml('omni-d-ct-pager', 'omniCtNav') +
+        '</div>' +
       '</div>' +
       '<div id="omni-d-sif" style="display:none">' +
         '<div id="omni-d-sif-pills" class="omni-d-pills"></div>' +
         '<div class="omni-d-sif-wrap">' +
           '<div class="omni-d-sidebar"><div class="omni-d-sidebar-lbl">Categories</div><div id="omni-d-catlist"></div></div>' +
           '<div class="omni-d-main">' +
-            '<input class="omni-d-search" id="omni-d-search" type="search" placeholder="Search tools…" oninput="omniRenderSif()">' +
-            '<div class="omni-d-card"><table class="omni-d-table">' +
-              '<thead><tr><th>Tool</th><th>Category</th><th>Status</th><th>Size</th></tr></thead>' +
-              '<tbody id="omni-d-sif-tbody"><tr><td colspan="4" class="omni-d-loading">Loading…</td></tr></tbody>' +
-            '</table></div>' +
+            '<input class="omni-d-search" id="omni-d-search" type="search" placeholder="Search tools…" oninput="omniSifSearch()">' +
+            '<div class="omni-d-card">' +
+              '<table class="omni-d-table"><thead><tr><th>Tool</th><th>Category</th><th>Status</th><th>Size</th></tr></thead>' +
+              '<tbody id="omni-d-sif-tbody"><tr><td colspan="4" class="omni-d-loading">Loading…</td></tr></tbody></table>' +
+              omniPagerHtml('omni-d-sif-pager', 'omniSifNav') +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>' +
       '<div id="omni-d-pl" style="display:none">' +
         '<div id="omni-d-pl-pills" class="omni-d-pills"></div>' +
-        '<div class="omni-d-card"><table class="omni-d-table">' +
-          '<thead><tr><th>Plugin</th><th>Category</th><th>Image</th><th>Local Status</th><th>Size</th></tr></thead>' +
-          '<tbody id="omni-d-pl-tbody"><tr><td colspan="5" class="omni-d-loading">Scanning plugin images…</td></tr></tbody>' +
-        '</table></div>' +
+        '<div class="omni-d-card">' +
+          '<table class="omni-d-table"><thead><tr><th>Plugin</th><th>Category</th><th>Image</th><th>Local Status</th><th>Size</th></tr></thead>' +
+          '<tbody id="omni-d-pl-tbody"><tr><td colspan="5" class="omni-d-loading">Scanning plugin images…</td></tr></tbody></table>' +
+          omniPagerHtml('omni-d-pl-pager', 'omniPlNav') +
+        '</div>' +
       '</div>';
     return el;
   }
@@ -171,7 +202,6 @@ _DOCKER_INJECT_JS = r"""<style>
   function injectDockerTab() {
     var tabNav = document.querySelector('.tab-nav');
     if (!tabNav) return;
-
     var btn = document.createElement('button');
     btn.className = 'tab-btn';
     btn.textContent = 'Docker Images';
@@ -181,7 +211,6 @@ _DOCKER_INJECT_JS = r"""<style>
       if (!_dLoaded) { _dLoaded = true; omniLoadCt(); omniLoadSif(); omniLoadPl(); }
     });
     tabNav.appendChild(btn);
-
     var panel = buildDockerPanel();
     var existingPanels = document.querySelectorAll('.tab-panel');
     if (existingPanels.length > 0) {
@@ -202,70 +231,68 @@ _DOCKER_INJECT_JS = r"""<style>
   };
 
   var CAT_COLORS = {
-    'alignment':['#eff6ff','#2563eb'],'assembly':['#ecfdf5','#059669'],
-    'variant-calling':['#fdf4ff','#9333ea'],'rna-seq':['#fff7ed','#ea580c'],
-    'single-cell':['#f0f9ff','#0284c7'],'epigenomics':['#fefce8','#ca8a04'],
-    'protein-structure':['#f5f3ff','#7c3aed'],'proteomics':['#fff1f2','#be123c'],
-    'population-genetics':['#f0fdf4','#16a34a'],'annotation':['#fef3c7','#92400e'],
-    'metagenomics':['#ecfeff','#0e7490'],'qc':['#f8fafc','#475569'],
-    'imaging':['#fdf2f8','#be185d'],'genomics':['#eff6ff','#1d4ed8']
+    'alignment':['#2563eb','#fff'],'assembly':['#059669','#fff'],
+    'variant-calling':['#9333ea','#fff'],'rna-seq':['#ea580c','#fff'],
+    'single-cell':['#0284c7','#fff'],'epigenomics':['#b45309','#fff'],
+    'protein-structure':['#7c3aed','#fff'],'proteomics':['#be123c','#fff'],
+    'population-genetics':['#16a34a','#fff'],'annotation':['#92400e','#fff'],
+    'metagenomics':['#0e7490','#fff'],'qc':['#475569','#fff'],
+    'imaging':['#be185d','#fff'],'genomics':['#1d4ed8','#fff']
   };
+  function omniCatChip(cat) {
+    var cc = CAT_COLORS[cat] || ['#64748b', '#fff'];
+    return '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:' + cc[0] + ';color:' + cc[1] + ';white-space:nowrap">' + omniEsc(cat) + '</span>';
+  }
 
+  /* ── CT ── */
+  window.omniCtNav = function(dir) { _ctPage += dir; omniRenderCt(); };
+  function omniRenderCt() {
+    var total = _ctData.length, pages = Math.ceil(total / _CT_PP);
+    if (_ctPage >= pages) _ctPage = Math.max(0, pages - 1);
+    var start = _ctPage * _CT_PP, end = Math.min(start + _CT_PP, total);
+    var rows = '';
+    for (var i = start; i < end; i++) {
+      var c = _ctData[i], name = (c.Names || '').replace(/^\//, '') || '—';
+      var st = (c.State || '').toLowerCase();
+      var run = st === 'running' || (c.Status || '').indexOf('Up ') === 0;
+      var rst = st === 'restarting' || (c.Status || '').toLowerCase().indexOf('restart') >= 0;
+      var bbg = run ? '#dcfce7' : rst ? '#fef3c7' : '#fee2e2';
+      var bcol = run ? '#15803d' : rst ? '#92400e' : '#b91c1c';
+      var blbl = run ? 'running' : rst ? 'restarting' : 'stopped';
+      rows += '<tr>' +
+        '<td style="font-weight:600;font-size:13px;color:#111827;padding:10px 14px">' + omniEsc(name) + '</td>' +
+        '<td style="font-size:11px;color:#6b7280;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:10px 14px">' + omniEsc(c.Image || '—') + '</td>' +
+        '<td style="padding:10px 14px"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:' + bbg + ';color:' + bcol + '">' + blbl + '</span></td>' +
+        '<td style="font-size:11px;color:#6b7280;white-space:nowrap;padding:10px 14px">' + omniEsc(c.RunningFor || '—') + '</td>' +
+        '<td style="font-size:11px;color:#374151;font-family:monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:10px 14px">' + omniEsc(c.Ports || '—') + '</td>' +
+        '</tr>';
+    }
+    document.getElementById('omni-d-ct-tbody').innerHTML = rows || '<tr><td colspan="5" class="omni-d-loading">No containers</td></tr>';
+    omniUpdatePager('omni-d-ct-pager', _ctPage, pages, total, 'containers');
+  }
   async function omniLoadCt() {
-    var tb = document.getElementById('omni-d-ct-tbody');
-    tb.innerHTML = '<tr><td colspan="5" class="omni-d-loading">Loading…</td></tr>';
+    document.getElementById('omni-d-ct-tbody').innerHTML = '<tr><td colspan="5" class="omni-d-loading">Loading…</td></tr>';
     try {
       var res = await fetch('/docker/containers'), d = await res.json();
       var pills = '';
       if (d.running != null) pills += '<span class="omni-d-pill" style="color:#059669">' + d.running + ' running</span>';
       if (d.stopped != null) pills += '<span class="omni-d-pill" style="color:#dc2626">' + d.stopped + ' stopped</span>';
       document.getElementById('omni-d-ct-pills').innerHTML = pills;
-      var cs = d.containers || [];
-      if (!cs.length) {
-        tb.innerHTML = '<tr><td colspan="5" class="omni-d-loading">' + (d.error ? 'Error: ' + omniEsc(d.error) : 'No containers found — is Docker running?') + '</td></tr>';
+      _ctData = d.containers || []; _ctPage = 0;
+      if (!_ctData.length) {
+        document.getElementById('omni-d-ct-tbody').innerHTML = '<tr><td colspan="5" class="omni-d-loading">' + (d.error ? 'Error: ' + omniEsc(d.error) : 'No containers found — is Docker running?') + '</td></tr>';
         return;
       }
-      var rows = '';
-      for (var i = 0; i < cs.length; i++) {
-        var c = cs[i], name = (c.Names || '').replace(/^\//, '') || '—';
-        var st = (c.State || '').toLowerCase();
-        var run = st === 'running' || (c.Status || '').indexOf('Up ') === 0;
-        var rst = st === 'restarting' || (c.Status || '').toLowerCase().indexOf('restart') >= 0;
-        var bbg = run ? '#dcfce7' : rst ? '#fef3c7' : '#fee2e2';
-        var bcol = run ? '#15803d' : rst ? '#92400e' : '#b91c1c';
-        var blbl = run ? 'running' : rst ? 'restarting' : 'stopped';
-        rows += '<tr>' +
-          '<td style="font-weight:600;font-size:13px;padding:10px 14px">' + omniEsc(name) + '</td>' +
-          '<td style="font-size:11px;color:#6b7280;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:10px 14px">' + omniEsc(c.Image || '—') + '</td>' +
-          '<td style="padding:10px 14px"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:' + bbg + ';color:' + bcol + '">' + blbl + '</span></td>' +
-          '<td style="font-size:11px;color:#9ca3af;white-space:nowrap;padding:10px 14px">' + omniEsc(c.RunningFor || '—') + '</td>' +
-          '<td style="font-size:11px;font-family:monospace;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:10px 14px">' + omniEsc(c.Ports || '—') + '</td>' +
-          '</tr>';
-      }
-      tb.innerHTML = rows;
+      omniRenderCt();
     } catch(e) {
-      document.getElementById('omni-d-ct-tbody').innerHTML =
-        '<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc2626;font-size:12px">' + omniEsc(String(e)) + '</td></tr>';
+      document.getElementById('omni-d-ct-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc2626;font-size:12px">' + omniEsc(String(e)) + '</td></tr>';
     }
   }
 
-  async function omniLoadSif() {
-    var tb = document.getElementById('omni-d-sif-tbody');
-    tb.innerHTML = '<tr><td colspan="4" class="omni-d-loading">Scanning SIF images…</td></tr>';
-    try {
-      var res = await fetch('/docker/sif-images'), d = await res.json();
-      _sifData = d.images || [];
-      var pills = '';
-      if (d.built != null) pills += '<span class="omni-d-pill" style="color:#059669">' + d.built + ' built</span>';
-      if (d.missing != null) pills += '<span class="omni-d-pill" style="color:#dc2626">' + d.missing + ' missing</span>';
-      if (d.total_gb != null) pills += '<span class="omni-d-pill" style="color:#2563eb">' + d.total_gb + ' GB total</span>';
-      document.getElementById('omni-d-sif-pills').innerHTML = pills;
-      omniRebuildCats();
-      omniRenderSif();
-    } catch(e) {
-      tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#dc2626;font-size:12px">' + omniEsc(String(e)) + '</td></tr>';
-    }
-  }
+  /* ── SIF ── */
+  window.omniSifNav = function(dir) { _sifPage += dir; omniRenderSif(); };
+  window.omniSifSearch = function() { _sifPage = 0; omniRenderSif(); };
+  window.omniSetCat = function(cat) { _sifCat = cat; _sifPage = 0; omniRebuildCats(); omniRenderSif(); };
 
   function omniRebuildCats() {
     var counts = {};
@@ -282,8 +309,6 @@ _DOCKER_INJECT_JS = r"""<style>
     document.getElementById('omni-d-catlist').innerHTML = html;
   }
 
-  window.omniSetCat = function(cat) { _sifCat = cat; omniRebuildCats(); omniRenderSif(); };
-
   window.omniRenderSif = function() {
     var q = (document.getElementById('omni-d-search').value || '').toLowerCase();
     var filtered = _sifData.filter(function(img) {
@@ -291,12 +316,15 @@ _DOCKER_INJECT_JS = r"""<style>
     });
     if (!filtered.length) {
       document.getElementById('omni-d-sif-tbody').innerHTML = '<tr><td colspan="4" class="omni-d-loading">No SIF images found</td></tr>';
+      document.getElementById('omni-d-sif-pager').style.display = 'none';
       return;
     }
+    var total = filtered.length, pages = Math.ceil(total / _SIF_PP);
+    if (_sifPage >= pages) _sifPage = Math.max(0, pages - 1);
+    var start = _sifPage * _SIF_PP, end = Math.min(start + _SIF_PP, total);
     var rows = '';
-    for (var i = 0; i < filtered.length; i++) {
+    for (var i = start; i < end; i++) {
       var img = filtered[i];
-      var cc = CAT_COLORS[img.category] || ['#f3f4f6', '#6b7280'];
       var sbg = img.exists ? '#dcfce7' : '#fee2e2', scol = img.exists ? '#15803d' : '#b91c1c', slbl = img.exists ? 'built' : 'missing';
       var sizeHtml = '—';
       if (img.exists) {
@@ -308,49 +336,73 @@ _DOCKER_INJECT_JS = r"""<style>
           '<span style="font-size:11px;color:#6b7280;white-space:nowrap;font-family:monospace">' + szlbl + '</span></div>';
       }
       rows += '<tr>' +
-        '<td style="font-weight:600;font-size:13px;padding:10px 14px">' + omniEsc(img.tool) + '</td>' +
-        '<td style="padding:10px 14px"><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:' + cc[0] + ';color:' + cc[1] + '">' + omniEsc(img.category) + '</span></td>' +
+        '<td style="font-weight:600;font-size:13px;color:#111827;padding:10px 14px">' + omniEsc(img.tool) + '</td>' +
+        '<td style="padding:10px 14px">' + omniCatChip(img.category) + '</td>' +
         '<td style="padding:10px 14px"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:' + sbg + ';color:' + scol + '">' + slbl + '</span></td>' +
         '<td style="padding:10px 14px;min-width:130px">' + sizeHtml + '</td>' +
         '</tr>';
     }
     document.getElementById('omni-d-sif-tbody').innerHTML = rows;
+    omniUpdatePager('omni-d-sif-pager', _sifPage, pages, total, 'tools');
   };
 
+  async function omniLoadSif() {
+    document.getElementById('omni-d-sif-tbody').innerHTML = '<tr><td colspan="4" class="omni-d-loading">Scanning SIF images…</td></tr>';
+    try {
+      var res = await fetch('/docker/sif-images'), d = await res.json();
+      _sifData = d.images || []; _sifPage = 0;
+      var pills = '';
+      if (d.built != null) pills += '<span class="omni-d-pill" style="color:#059669">' + d.built + ' built</span>';
+      if (d.missing != null) pills += '<span class="omni-d-pill" style="color:#dc2626">' + d.missing + ' missing</span>';
+      if (d.total_gb != null) pills += '<span class="omni-d-pill" style="color:#2563eb">' + d.total_gb + ' GB total</span>';
+      document.getElementById('omni-d-sif-pills').innerHTML = pills;
+      omniRebuildCats(); omniRenderSif();
+    } catch(e) {
+      document.getElementById('omni-d-sif-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#dc2626;font-size:12px">' + omniEsc(String(e)) + '</td></tr>';
+    }
+  }
+
+  /* ── Plugins ── */
+  window.omniPlNav = function(dir) { _plPage += dir; omniRenderPl(); };
+  function omniRenderPl() {
+    var total = _plData.length, pages = Math.ceil(total / _PL_PP);
+    if (_plPage >= pages) _plPage = Math.max(0, pages - 1);
+    var start = _plPage * _PL_PP, end = Math.min(start + _PL_PP, total);
+    var rows = '';
+    for (var i = start; i < end; i++) {
+      var p = _plData[i], st = p.local_status || 'unknown';
+      var pbg = st === 'present' ? '#dcfce7' : '#fee2e2';
+      var pcol = st === 'present' ? '#15803d' : '#b91c1c';
+      var szHtml = '—';
+      if (st === 'present' && p.size_mb > 0) { szHtml = p.size_mb >= 1024 ? (p.size_mb / 1024).toFixed(1) + ' GB' : p.size_mb + ' MB'; }
+      rows += '<tr>' +
+        '<td style="font-weight:600;color:#111827;padding:10px 14px;white-space:nowrap">' + omniEsc(p.name || p.plugin || '—') + '</td>' +
+        '<td style="padding:10px 14px">' + omniCatChip(p.category || 'general') + '</td>' +
+        '<td style="font-size:11px;color:#6b7280;padding:10px 14px;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + omniEsc(p.image || '—') + '</td>' +
+        '<td style="padding:10px 14px"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:' + pbg + ';color:' + pcol + '">' + st + '</span></td>' +
+        '<td style="font-size:11px;color:#6b7280;padding:10px 14px;font-family:monospace;white-space:nowrap">' + szHtml + '</td>' +
+        '</tr>';
+    }
+    document.getElementById('omni-d-pl-tbody').innerHTML = rows || '<tr><td colspan="5" class="omni-d-loading">No plugins</td></tr>';
+    omniUpdatePager('omni-d-pl-pager', _plPage, pages, total, 'plugins');
+  }
   async function omniLoadPl() {
-    var tb = document.getElementById('omni-d-pl-tbody');
-    tb.innerHTML = '<tr><td colspan="5" class="omni-d-loading">Scanning plugin images…</td></tr>';
+    document.getElementById('omni-d-pl-tbody').innerHTML = '<tr><td colspan="5" class="omni-d-loading">Scanning plugin images…</td></tr>';
     try {
       var res = await fetch('/docker/plugin-images'), d = await res.json();
-      var ps = d.plugins || [];
+      _plData = d.plugins || []; _plPage = 0;
       var pills = '';
-      if (d.present != null) pills += '<span class="omni-d-pill">' + ps.length + ' plugins</span>';
+      if (d.present != null) pills += '<span class="omni-d-pill">' + _plData.length + ' plugins</span>';
       if (d.present != null) pills += '<span class="omni-d-pill" style="color:#059669">' + d.present + ' present</span>';
       if (d.missing != null) pills += '<span class="omni-d-pill" style="color:#dc2626">' + d.missing + ' missing</span>';
       document.getElementById('omni-d-pl-pills').innerHTML = pills;
-      if (!ps.length) {
-        tb.innerHTML = '<tr><td colspan="5" class="omni-d-loading">No plugins found</td></tr>';
+      if (!_plData.length) {
+        document.getElementById('omni-d-pl-tbody').innerHTML = '<tr><td colspan="5" class="omni-d-loading">No plugins found</td></tr>';
         return;
       }
-      var rows = '';
-      for (var i = 0; i < ps.length; i++) {
-        var p = ps[i], st = p.local_status || 'unknown';
-        var pbg = st === 'present' ? '#dcfce7' : '#fee2e2';
-        var pcol = st === 'present' ? '#15803d' : '#b91c1c';
-        var cc = CAT_COLORS[p.category] || ['#f3f4f6', '#6b7280'];
-        var szHtml = '—';
-        if (st === 'present' && p.size_mb > 0) { szHtml = p.size_mb >= 1024 ? (p.size_mb / 1024).toFixed(1) + ' GB' : p.size_mb + ' MB'; }
-        rows += '<tr>' +
-          '<td style="font-weight:600;padding:10px 14px;white-space:nowrap">' + omniEsc(p.name || p.plugin || '—') + '</td>' +
-          '<td style="padding:10px 14px"><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:' + cc[0] + ';color:' + cc[1] + ';white-space:nowrap">' + omniEsc(p.category || 'general') + '</span></td>' +
-          '<td style="font-size:11px;color:#6b7280;padding:10px 14px;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + omniEsc(p.image || '—') + '</td>' +
-          '<td style="padding:10px 14px"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:' + pbg + ';color:' + pcol + '">' + st + '</span></td>' +
-          '<td style="font-size:11px;color:#6b7280;padding:10px 14px;font-family:monospace;white-space:nowrap">' + szHtml + '</td>' +
-          '</tr>';
-      }
-      tb.innerHTML = rows;
+      omniRenderPl();
     } catch(e) {
-      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc2626;font-size:12px">' + omniEsc(String(e)) + '</td></tr>';
+      document.getElementById('omni-d-pl-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc2626;font-size:12px">' + omniEsc(String(e)) + '</td></tr>';
     }
   }
 
@@ -426,7 +478,7 @@ def report_generate() -> JSONResponse:
 @app.get("/report/data")
 def report_data() -> JSONResponse:
     """Return structured JSON data for the React frontend (projects, languages, coverage)."""
-    data_path = _workspace_root() / "out" / "reports" / "report_data.json"
+    data_path = _workspace_root() / "work" / "out" / "reports" / "report_data.json"
     if not data_path.exists():
         return JSONResponse({"error": "No report data yet. Generate the report first."}, status_code=404)
     try:
@@ -440,7 +492,7 @@ def report_data() -> JSONResponse:
 def report_status() -> JSONResponse:
     """Poll job state. Frontend polls this every 2s while running."""
     state = _job.as_dict()
-    report_path = _workspace_root() / "out" / "reports" / "omnibioai_ecosystem_report.html"
+    report_path = _workspace_root() / "work" / "out" / "reports" / "omnibioai_ecosystem_report.html"
     state["report_exists"] = report_path.exists()
     if report_path.exists():
         mtime = datetime.fromtimestamp(report_path.stat().st_mtime, tz=timezone.utc)
@@ -457,7 +509,7 @@ def report_status() -> JSONResponse:
 
 @app.get("/", response_class=HTMLResponse)
 def root() -> HTMLResponse:
-    report_path = _workspace_root() / "out" / "reports" / "omnibioai_ecosystem_report.html"
+    report_path = _workspace_root() / "work" / "out" / "reports" / "omnibioai_ecosystem_report.html"
 
     if report_path.exists():
         report_html = report_path.read_text(encoding="utf-8")
@@ -919,6 +971,11 @@ def dashboard() -> str:
           </table>
         </div>
       </div>
+      <div id="ct-pager" style="display:none;align-items:center;gap:8px;justify-content:center;padding:10px 0;margin-top:4px;">
+        <button id="ct-prev-btn" onclick="ctPageNav(-1)" style="padding:5px 14px;border-radius:6px;border:1px solid #d1d5db;background:white;color:#374151;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">&#8592; Prev</button>
+        <span id="ct-page-info" style="font-size:12px;color:#6b7280;min-width:140px;text-align:center;"></span>
+        <button id="ct-next-btn" onclick="ctPageNav(1)" style="padding:5px 14px;border-radius:6px;border:1px solid #d1d5db;background:white;color:#374151;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">Next &#8594;</button>
+      </div>
     </div>
 
     <!-- B: Tool SIF Images -->
@@ -940,9 +997,9 @@ def dashboard() -> str:
             </table>
           </div>
           <div id="sif-pager" style="display:none;align-items:center;gap:8px;justify-content:center;padding:10px 0;margin-top:4px;">
-            <button id="sif-prev-btn" onclick="sifPageNav(-1)" style="padding:5px 14px;border-radius:6px;border:1px solid #2a2d3e;background:#1a1d2e;color:#9ca3af;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">&#8592; Prev</button>
-            <span id="sif-page-info" style="font-size:12px;color:#9ca3af;min-width:140px;text-align:center;"></span>
-            <button id="sif-next-btn" onclick="sifPageNav(1)" style="padding:5px 14px;border-radius:6px;border:1px solid #2a2d3e;background:#1a1d2e;color:#9ca3af;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">Next &#8594;</button>
+            <button id="sif-prev-btn" onclick="sifPageNav(-1)" style="padding:5px 14px;border-radius:6px;border:1px solid #d1d5db;background:white;color:#374151;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">&#8592; Prev</button>
+            <span id="sif-page-info" style="font-size:12px;color:#6b7280;min-width:140px;text-align:center;"></span>
+            <button id="sif-next-btn" onclick="sifPageNav(1)" style="padding:5px 14px;border-radius:6px;border:1px solid #d1d5db;background:white;color:#374151;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">Next &#8594;</button>
           </div>
         </div>
       </div>
@@ -962,6 +1019,11 @@ def dashboard() -> str:
             <tbody id="pl-tbody"><tr><td colspan="5" class="loading-row">Loading&hellip;</td></tr></tbody>
           </table>
         </div>
+      </div>
+      <div id="pl-pager" style="display:none;align-items:center;gap:8px;justify-content:center;padding:10px 0;margin-top:4px;">
+        <button id="pl-prev-btn" onclick="plPageNav(-1)" style="padding:5px 14px;border-radius:6px;border:1px solid #d1d5db;background:white;color:#374151;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">&#8592; Prev</button>
+        <span id="pl-page-info" style="font-size:12px;color:#6b7280;min-width:140px;text-align:center;"></span>
+        <button id="pl-next-btn" onclick="plPageNav(1)" style="padding:5px 14px;border-radius:6px;border:1px solid #d1d5db;background:white;color:#374151;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity .12s;">Next &#8594;</button>
       </div>
     </div>
 
@@ -1103,39 +1165,58 @@ def dashboard() -> str:
   }
 
   /* ── docker: containers ─────────────────────────────────────── */
+  var _ctData=[],_ctPage=0,_CT_PER_PAGE=25;
+  function ctPageNav(dir){_ctPage+=dir;renderCt();}
+  function renderCt(){
+    var pager=document.getElementById('ct-pager');
+    if(!_ctData.length){pager.style.display='none';return;}
+    var total=_ctData.length,pages=Math.ceil(total/_CT_PER_PAGE);
+    if(_ctPage>=pages)_ctPage=pages-1;
+    if(_ctPage<0)_ctPage=0;
+    var start=_ctPage*_CT_PER_PAGE,end=Math.min(start+_CT_PER_PAGE,total);
+    var rows='';
+    for(var i=start;i<end;i++){
+      var c=_ctData[i];
+      var name=(c.Names||'').replace(/^\\//, '')||'—';
+      var state=(c.State||'').toLowerCase();
+      var isRun=state==='running'||(c.Status||'').startsWith('Up');
+      var isRes=state==='restarting'||(c.Status||'').toLowerCase().includes('restart');
+      var bbg=isRun?'#dcfce7':isRes?'#fef3c7':'#fee2e2';
+      var bcol=isRun?'#15803d':isRes?'#92400e':'#b91c1c';
+      var blbl=isRun?'running':isRes?'restarting':'stopped';
+      var badge='<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:'+bbg+';color:'+bcol+';white-space:nowrap;">'+blbl+'</span>';
+      rows+='<tr>'
+        +'<td class="svc-name">'+esc(name)+'</td>'
+        +'<td class="target-cell" style="max-width:240px;">'+esc(c.Image||'—')+'</td>'
+        +'<td>'+badge+'</td>'
+        +'<td style="font-size:11px;color:#9ca3af;white-space:nowrap;padding:10px 14px;">'+esc(c.RunningFor||'—')+'</td>'
+        +'<td class="mono target-cell" style="max-width:200px;">'+esc(c.Ports||'—')+'</td>'
+        +'</tr>';
+    }
+    document.getElementById('ct-tbody').innerHTML=rows;
+    if(pages>1){
+      pager.style.display='flex';
+      document.getElementById('ct-page-info').textContent='Page '+(_ctPage+1)+' of '+pages+' ('+total+' containers)';
+      var pb=document.getElementById('ct-prev-btn'),nb=document.getElementById('ct-next-btn');
+      pb.disabled=_ctPage===0;pb.style.opacity=_ctPage===0?'0.4':'1';
+      nb.disabled=_ctPage>=pages-1;nb.style.opacity=_ctPage>=pages-1?'0.4':'1';
+    }else{pager.style.display='none';}
+  }
   async function loadContainers(){
     document.getElementById('ct-tbody').innerHTML='<tr><td colspan="5" class="loading-row">Loading…</td></tr>';
+    document.getElementById('ct-pager').style.display='none';
     try{
       var res=await fetch('/docker/containers'),d=await res.json();
       var pills='';
       if(d.running!=null)pills+='<span class="stat-pill" style="color:#059669;">'+d.running+' running</span>';
       if(d.stopped!=null)pills+='<span class="stat-pill" style="color:#dc2626;">'+d.stopped+' stopped</span>';
       document.getElementById('ct-pills').innerHTML=pills;
-      var cs=d.containers||[];
-      if(!cs.length){
+      _ctData=d.containers||[];_ctPage=0;
+      if(!_ctData.length){
         document.getElementById('ct-tbody').innerHTML='<tr><td colspan="5" class="loading-row">'+(d.error?'Error: '+esc(d.error):'No containers found — is Docker running?')+'</td></tr>';
         return;
       }
-      var rows='';
-      for(var i=0;i<cs.length;i++){
-        var c=cs[i];
-        var name=(c.Names||'').replace(/^\\//, '')||'—';
-        var state=(c.State||'').toLowerCase();
-        var isRun=state==='running'||(c.Status||'').startsWith('Up');
-        var isRes=state==='restarting'||(c.Status||'').toLowerCase().includes('restart');
-        var bbg=isRun?'#dcfce7':isRes?'#fef3c7':'#fee2e2';
-        var bcol=isRun?'#15803d':isRes?'#92400e':'#b91c1c';
-        var blbl=isRun?'running':isRes?'restarting':'stopped';
-        var badge='<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:'+bbg+';color:'+bcol+';white-space:nowrap;">'+blbl+'</span>';
-        rows+='<tr>'
-          +'<td class="svc-name">'+esc(name)+'</td>'
-          +'<td class="target-cell" style="max-width:240px;">'+esc(c.Image||'—')+'</td>'
-          +'<td>'+badge+'</td>'
-          +'<td style="font-size:11px;color:#9ca3af;white-space:nowrap;padding:10px 14px;">'+esc(c.RunningFor||'—')+'</td>'
-          +'<td class="mono target-cell" style="max-width:200px;">'+esc(c.Ports||'—')+'</td>'
-          +'</tr>';
-      }
-      document.getElementById('ct-tbody').innerHTML=rows;
+      renderCt();
     }catch(e){
       document.getElementById('ct-tbody').innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc2626;font-size:12px;">'+esc(String(e))+'</td></tr>';
     }
@@ -1143,17 +1224,17 @@ def dashboard() -> str:
 
   /* ── docker: SIF images ─────────────────────────────────────── */
   var _sifData=[],_sifCat=null,_sifPage=0;
-  var _SIF_PER_PAGE=20;
+  var _SIF_PER_PAGE=25;
   var CAT_COLORS={
-    'alignment':['#eff6ff','#2563eb'],'assembly':['#ecfdf5','#059669'],
-    'variant-calling':['#fdf4ff','#9333ea'],'rna-seq':['#fff7ed','#ea580c'],
-    'single-cell':['#f0f9ff','#0284c7'],'epigenomics':['#fefce8','#ca8a04'],
-    'protein-structure':['#f5f3ff','#7c3aed'],'proteomics':['#fff1f2','#be123c'],
-    'population-genetics':['#f0fdf4','#16a34a'],'annotation':['#fef3c7','#92400e'],
-    'metagenomics':['#ecfeff','#0e7490'],'qc':['#f8fafc','#475569'],
-    'imaging':['#fdf2f8','#be185d'],'genomics':['#eff6ff','#1d4ed8']
+    'alignment':['#2563eb','#fff'],'assembly':['#059669','#fff'],
+    'variant-calling':['#9333ea','#fff'],'rna-seq':['#ea580c','#fff'],
+    'single-cell':['#0284c7','#fff'],'epigenomics':['#b45309','#fff'],
+    'protein-structure':['#7c3aed','#fff'],'proteomics':['#be123c','#fff'],
+    'population-genetics':['#16a34a','#fff'],'annotation':['#92400e','#fff'],
+    'metagenomics':['#0e7490','#fff'],'qc':['#475569','#fff'],
+    'imaging':['#be185d','#fff'],'genomics':['#1d4ed8','#fff']
   };
-  function catChip(cat){var cc=CAT_COLORS[cat]||['#f3f4f6','#6b7280'];return '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:'+cc[0]+';color:'+cc[1]+';white-space:nowrap;">'+esc(cat)+'</span>';}
+  function catChip(cat){var cc=CAT_COLORS[cat]||['#64748b','#fff'];return '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:'+cc[0]+';color:'+cc[1]+';white-space:nowrap;">'+esc(cat)+'</span>';}
 
   async function loadSifImages(){
     document.getElementById('sif-tbody').innerHTML='<tr><td colspan="4" class="loading-row">Scanning SIF images…</td></tr>';
@@ -1226,44 +1307,60 @@ def dashboard() -> str:
       document.getElementById('sif-page-info').textContent='Page '+(_sifPage+1)+' of '+pages+' ('+total+' tools)';
       var prevBtn=document.getElementById('sif-prev-btn');
       var nextBtn=document.getElementById('sif-next-btn');
-      prevBtn.disabled=_sifPage===0;prevBtn.style.opacity=_sifPage===0?'0.35':'1';
-      prevBtn.style.borderColor=_sifPage===0?'#2a2d3e':'#2a2d3e';
-      nextBtn.disabled=_sifPage>=pages-1;nextBtn.style.opacity=_sifPage>=pages-1?'0.35':'1';
-      nextBtn.style.color=_sifPage>=pages-1?'#9ca3af':'#00e5a0';
-      prevBtn.style.color=_sifPage===0?'#9ca3af':'#00e5a0';
+      prevBtn.disabled=_sifPage===0;prevBtn.style.opacity=_sifPage===0?'0.4':'1';
+      nextBtn.disabled=_sifPage>=pages-1;nextBtn.style.opacity=_sifPage>=pages-1?'0.4':'1';
     }else{
       pager.style.display='none';
     }
   }
 
   /* ── docker: plugin images ──────────────────────────────────── */
+  var _plData=[],_plPage=0,_PL_PER_PAGE=25;
+  function plPageNav(dir){_plPage+=dir;renderPl();}
+  function renderPl(){
+    var pager=document.getElementById('pl-pager');
+    if(!_plData.length){pager.style.display='none';return;}
+    var total=_plData.length,pages=Math.ceil(total/_PL_PER_PAGE);
+    if(_plPage>=pages)_plPage=pages-1;
+    if(_plPage<0)_plPage=0;
+    var start=_plPage*_PL_PER_PAGE,end=Math.min(start+_PL_PER_PAGE,total);
+    var rows='';
+    for(var i=start;i<end;i++){
+      var p=_plData[i],st=p.local_status||'unknown';
+      var pbg=st==='present'?'#dcfce7':'#fee2e2';
+      var pcol=st==='present'?'#15803d':'#b91c1c';
+      var szHtml='—';
+      if(st==='present'&&p.size_mb>0){szHtml=p.size_mb>=1024?(p.size_mb/1024).toFixed(1)+' GB':p.size_mb+' MB';}
+      rows+='<tr>'
+        +'<td style="font-weight:600;color:#111827;padding:10px 14px;white-space:nowrap;">'+esc(p.name||p.plugin||'—')+'</td>'
+        +'<td style="padding:10px 14px;">'+catChip(p.category||'general')+'</td>'
+        +'<td class="mono target-cell" style="font-size:11px;color:#6b7280;padding:10px 14px;max-width:300px;">'+esc(p.image||'—')+'</td>'
+        +'<td style="padding:10px 14px;"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:'+pbg+';color:'+pcol+';">'+st+'</span></td>'
+        +'<td class="mono" style="font-size:11px;color:#6b7280;padding:10px 14px;white-space:nowrap;">'+szHtml+'</td>'
+        +'</tr>';
+    }
+    document.getElementById('pl-tbody').innerHTML=rows;
+    if(pages>1){
+      pager.style.display='flex';
+      document.getElementById('pl-page-info').textContent='Page '+(_plPage+1)+' of '+pages+' ('+total+' plugins)';
+      var pb=document.getElementById('pl-prev-btn'),nb=document.getElementById('pl-next-btn');
+      pb.disabled=_plPage===0;pb.style.opacity=_plPage===0?'0.4':'1';
+      nb.disabled=_plPage>=pages-1;nb.style.opacity=_plPage>=pages-1?'0.4':'1';
+    }else{pager.style.display='none';}
+  }
   async function loadPlugins(){
     document.getElementById('pl-tbody').innerHTML='<tr><td colspan="5" class="loading-row">Scanning plugin images…</td></tr>';
+    document.getElementById('pl-pager').style.display='none';
     try{
       var res=await fetch('/docker/plugin-images'),d=await res.json();
-      var ps=d.plugins||[];
+      _plData=d.plugins||[];_plPage=0;
       var pills='';
-      if(d.present!=null)pills+='<span class="stat-pill">'+ps.length+' plugins</span>';
+      if(d.present!=null)pills+='<span class="stat-pill">'+_plData.length+' plugins</span>';
       if(d.present!=null)pills+='<span class="stat-pill" style="color:#059669;">'+d.present+' present</span>';
       if(d.missing!=null)pills+='<span class="stat-pill" style="color:#dc2626;">'+d.missing+' missing</span>';
       document.getElementById('pl-pills').innerHTML=pills;
-      if(!ps.length){document.getElementById('pl-tbody').innerHTML='<tr><td colspan="5" class="loading-row">No plugins found</td></tr>';return;}
-      var rows='';
-      for(var i=0;i<ps.length;i++){
-        var p=ps[i],st=p.local_status||'unknown';
-        var pbg=st==='present'?'#dcfce7':'#fee2e2';
-        var pcol=st==='present'?'#15803d':'#b91c1c';
-        var szHtml='—';
-        if(st==='present'&&p.size_mb>0){szHtml=p.size_mb>=1024?(p.size_mb/1024).toFixed(1)+' GB':p.size_mb+' MB';}
-        rows+='<tr>'
-          +'<td style="font-weight:600;color:#111827;padding:10px 14px;white-space:nowrap;">'+esc(p.name||p.plugin||'—')+'</td>'
-          +'<td style="padding:10px 14px;">'+catChip(p.category||'general')+'</td>'
-          +'<td class="mono target-cell" style="font-size:11px;color:#6b7280;padding:10px 14px;max-width:300px;">'+esc(p.image||'—')+'</td>'
-          +'<td style="padding:10px 14px;"><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:'+pbg+';color:'+pcol+';">'+st+'</span></td>'
-          +'<td class="mono" style="font-size:11px;color:#6b7280;padding:10px 14px;white-space:nowrap;">'+szHtml+'</td>'
-          +'</tr>';
-      }
-      document.getElementById('pl-tbody').innerHTML=rows;
+      if(!_plData.length){document.getElementById('pl-tbody').innerHTML='<tr><td colspan="5" class="loading-row">No plugins found</td></tr>';return;}
+      renderPl();
     }catch(e){
       document.getElementById('pl-tbody').innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#dc2626;font-size:12px;">'+esc(String(e))+'</td></tr>';
     }
