@@ -567,11 +567,11 @@ def architecture_section_html(project_totals: Dict[str, Totals],
   <div style="border-radius:12px;border:0.5px solid var(--c-teal-bd);background:var(--c-teal-bg);padding:10px 8px 12px">
     <div style="font-size:11px;font-weight:600;text-align:center;color:var(--c-teal);margin-bottom:8px">workbench</div>
     {"".join(_arch_node(n,d,p,u,'teal') for n,d,p,u in [
-      ('workbench','Django · 80+ plugins','8000','http://127.0.0.1:8000'),
-      ('lims','lab data','7000','http://127.0.0.1:7000'),
-      ('rag','PubMed · DeepSeek','8090',None),
-      ('workflow-bundles','WDL/Nextflow/CWL','8098',None),
-      ('control-center','health · images','7070','http://127.0.0.1:7070'),
+      ('workbench','Django · 80+ plugins','8000','https://app.omnibioai.org'),
+      ('lims','lab data','7000','https://lims.omnibioai.org'),
+      ('rag','PubMed · DeepSeek','8090','https://rag.omnibioai.org'),
+      ('workflow-bundles','WDL/Nextflow/CWL','8098','https://bundles.omnibioai.org'),
+      ('control-center','health · images','7070','https://control.omnibioai.org'),
     ])}
   </div>
 
@@ -579,8 +579,8 @@ def architecture_section_html(project_totals: Dict[str, Totals],
   <div style="border-radius:12px;border:0.5px solid var(--c-amber-bd);background:var(--c-amber-bg);padding:10px 8px 12px">
     <div style="font-size:11px;font-weight:600;text-align:center;color:var(--c-amber);margin-bottom:8px">services</div>
     {"".join(_arch_node(n,d,p,u,'amber') for n,d,p,u in [
-      ('toolserver','FastAPI bio tools','9090','http://127.0.0.1:9090'),
-      ('model-registry','ML versioning','8095','http://127.0.0.1:8095'),
+      ('toolserver','FastAPI bio tools','9090','https://tools.omnibioai.org'),
+      ('model-registry','ML versioning','8095','https://models.omnibioai.org'),
       ('opa','Open Policy Agent','8181',None),
       ('ollama','Llama/DeepSeek','11434',None),
       ('videos','tutorials · SDK','8086',None),
@@ -591,10 +591,10 @@ def architecture_section_html(project_totals: Dict[str, Totals],
   <div style="border-radius:12px;border:0.5px solid var(--c-purple-bd);background:var(--c-purple-bg);padding:10px 8px 12px">
     <div style="font-size:11px;font-weight:600;text-align:center;color:var(--c-purple);margin-bottom:8px">execution</div>
     {"".join(_arch_node(n,d,p,u,'purple') for n,d,p,u in [
-      ('tes','Slurm/AWS/Azure/GCP','8081','http://127.0.0.1:8081'),
+      ('tes','Slurm/AWS/Azure/GCP','8081','https://app.omnibioai.org/_svc/tes'),
       ('tool-runtime','Docker/Singularity',None,None),
       ('tool-images','80+ bio tools','8097',None),
-      ('dev-docker','DGX · GPU env',None,None),
+      ('dev-docker','DGX · GPU env','8082','https://dev.omnibioai.org'),
     ])}
   </div>
 
@@ -633,7 +633,7 @@ def architecture_section_html(project_totals: Dict[str, Totals],
 </div>
 
 <script>
-var _hd={{}};var _cc='{cc_url}';
+var _hd={{}};var _cc='';
 function fetchH(){{
   fetch(_cc+'/summary').then(function(r){{return r.json();}}).then(function(d){{
     var svcs=d.services||[];
@@ -1305,7 +1305,7 @@ def health_section_html(health: EcosystemHealth, control_center_url: str) -> str
 </div>
 
 <script>
-var _hChart=null,_hTimer=null,_hCd=30,_hUrl='{cc_url}';
+var _hChart=null,_hTimer=null,_hCd=30,_hUrl='';
 var _hIcons={{mysql:'🗄️',redis:'⚡',http:'🌐',tcp:'🔌'}};
 function _hLatCol(ms){{return ms<5?'#3B6D11':ms<20?'#854F0B':'#A32D2D';}}
 function hlthFetch(){{
@@ -1502,7 +1502,7 @@ def docker_section_html_UNUSED(control_center_url: str) -> str:  # kept for refe
 </div>
 
 <script>
-var _DKU='{cc_url}';
+var _DKU='';
 var _DC={{pp:15,page:1,all:[],filtered:[],q:''}};
 var _DS={{pp:15,page:1,all:[],filtered:[],q:'',cat:null}};
 var _DP={{pp:15,page:1,all:[],filtered:[],q:'',cat:null,miss:false}};
@@ -1762,6 +1762,8 @@ def build_report(out_html: Path, title: str, timestamp: str,
     <button class="tab-btn" onclick="openTab('tab-health',this)">Health Status</button>
   </div>
 
+  {PAGINATION_JS}
+
   <div id="tab-arch"   class="tab-panel active">{arch_html}</div>
   <div id="tab-proj"   class="tab-panel">{proj_html}</div>
   <div id="tab-lang"   class="tab-panel">{lang_html}</div>
@@ -1775,8 +1777,6 @@ def build_report(out_html: Path, title: str, timestamp: str,
   </div>
 </div>
 
-{PAGINATION_JS}
-
 <script>
 function openTab(id, btn) {{
   document.querySelectorAll('.tab-panel').forEach(function(t){{t.classList.remove('active');}});
@@ -1786,7 +1786,7 @@ function openTab(id, btn) {{
 }}
 
 (function globalHealthBadge(){{
-  fetch('{cc_url}/summary').then(function(r){{return r.json();}}).then(function(d){{
+  fetch('/summary').then(function(r){{return r.json();}}).then(function(d){{
     var ov=(d.overall_status||'UNKNOWN').toUpperCase();
     var badge=document.getElementById('global-health-badge');
     var dot=document.getElementById('global-health-dot');

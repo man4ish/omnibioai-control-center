@@ -10,7 +10,7 @@ interface Props {
   onGenerate: () => void
 }
 
-const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? 'http://localhost:7070'
+const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? ''
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'health',    label: 'Health Dashboard' },
