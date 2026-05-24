@@ -53,7 +53,7 @@ NOT_MATCH_D   = r"(data|uploads|downloads|cache|results|logs)"
 DEFAULT_TARGETS = [
     "omnibioai-tes", "omnibioai", "omnibioai-rag", "omnibioai-lims",
     "omnibioai-toolserver", "omnibioai-tool-runtime",
-    "omnibioai-control-center", "omnibioai-dev-docker", "omnibioai_sdk",
+    "omnibioai-control-center", "omnibioai-dev-docker", "omnibioai-sdk",
     "omnibioai-workflow-bundles", "omnibioai-model-registry",
     "omnibioai-tool-images", "omnibioai-studio", "omnibioai-dev-hub",
     "omnibioai-videos", "omnibioai-iam-client", "omnibioai-policy-engine",
@@ -709,7 +709,7 @@ CAT_MAP = {
     "omnibioai-rag":                "core",
     "omnibioai-workflow-bundles":   "core",
     "omnibioai-studio":             "sdk",
-    "omnibioai_sdk":                "sdk",
+    "omnibioai-sdk":                "sdk",
     "omnibioai-dev-hub":            "sdk",
     "omnibioai-videos":             "sdk",
     "omnibioai-tes":                "exec",
