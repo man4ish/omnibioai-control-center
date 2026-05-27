@@ -3,6 +3,22 @@
 from __future__ import annotations
 
 import os
+
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN", ""),
+    integrations=[
+        FastApiIntegration(),
+        StarletteIntegration(),
+    ],
+    traces_sample_rate=0.1,
+    environment=os.environ.get("SENTRY_ENVIRONMENT", "beta"),
+    release=os.environ.get("SENTRY_RELEASE", "0.2.0-beta"),
+    send_default_pii=False,
+)
 import subprocess
 import threading
 from datetime import datetime, timezone
