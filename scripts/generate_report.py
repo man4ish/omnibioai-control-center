@@ -436,73 +436,102 @@ def fetch_health(base_url: str, timeout_s: float = 5.0) -> EcosystemHealth:
 SHARED_CSS = """
 <style id="shared">
 :root {
-  --c-teal:   #00e5a0; --c-teal-bg:   rgba(0,229,160,0.1); --c-teal-bd:   rgba(0,229,160,0.3);
-  --c-blue:   #0094ff; --c-blue-bg:   rgba(0,148,255,0.1); --c-blue-bd:   rgba(0,148,255,0.3);
-  --c-red:    #ef4444; --c-red-bg:    rgba(239,68,68,0.1); --c-red-bd:    rgba(239,68,68,0.3);
-  --c-amber:  #f59e0b; --c-amber-bg:  rgba(245,158,11,0.1); --c-amber-bd:  rgba(245,158,11,0.3);
-  --c-purple: #a855f7; --c-purple-bg: rgba(168,85,247,0.1); --c-purple-bd: rgba(168,85,247,0.3);
-  --c-gray:   #9ca3af; --c-gray-bg:   rgba(107,114,128,0.1); --c-gray-bd:   rgba(107,114,128,0.3);
-  --c-green:  #22c55e; --c-green-bg:  rgba(34,197,94,0.1); --c-green-bd:  rgba(34,197,94,0.3);
+  --color-bg:              #0d1117;
+  --color-bg-surface:      #161b27;
+  --color-bg-surface2:     #1e2435;
+  --color-border:          #2a2d3e;
+  --color-text:            #e2e8f0;
+  --color-text-secondary:  #9ca3af;
+  --color-text-muted:      #6b7280;
+  --color-accent:          #00e5a0;
+  --color-accent-dim:      rgba(0,229,160,0.10);
+  --color-success:         #22c55e;
+  --color-success-dim:     rgba(34,197,94,0.12);
+  --color-success-border:  rgba(34,197,94,0.30);
+  --color-danger:          #ef4444;
+  --color-danger-dim:      rgba(239,68,68,0.12);
+  --color-danger-border:   rgba(239,68,68,0.30);
+  --color-warning:         #f59e0b;
+  --color-warning-dim:     rgba(245,158,11,0.12);
+  --color-warning-border:  rgba(245,158,11,0.30);
+  --color-info:            #0094ff;
+  --color-info-dim:        rgba(0,148,255,0.10);
+  --radius-sm:             6px;
+  --radius-lg:             12px;
+  --radius-pill:           9999px;
+  --font-sans:             'IBM Plex Sans', system-ui, sans-serif;
+  --font-size-xs:          11px;
+  --font-size-sm:          12px;
+  --font-size-base:        13px;
+
+  /* Architecture lane colors — kept unchanged, encode domain meaning */
+  --c-teal:   #00e5a0; --c-teal-bg:   rgba(0,229,160,0.08); --c-teal-bd:   rgba(0,229,160,0.25);
+  --c-blue:   #0094ff; --c-blue-bg:   rgba(0,148,255,0.08); --c-blue-bd:   rgba(0,148,255,0.25);
+  --c-red:    #ef4444; --c-red-bg:    rgba(239,68,68,0.08);  --c-red-bd:    rgba(239,68,68,0.25);
+  --c-amber:  #f59e0b; --c-amber-bg:  rgba(245,158,11,0.08); --c-amber-bd:  rgba(245,158,11,0.25);
+  --c-purple: #a855f7; --c-purple-bg: rgba(168,85,247,0.08); --c-purple-bd: rgba(168,85,247,0.25);
+  --c-gray:   #9ca3af; --c-gray-bg:   rgba(107,114,128,0.08);--c-gray-bd:   rgba(107,114,128,0.25);
+  --c-green:  #22c55e; --c-green-bg:  rgba(34,197,94,0.08);  --c-green-bd:  rgba(34,197,94,0.25);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:transparent}
+body{font-family:var(--font-sans);background:transparent}
 .tab-section{padding:20px 0}
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:16px}
-.kpi{background:#1a1d2e;border-radius:8px;padding:12px 14px}
-.kpi-label{font-size:11px;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
-.kpi-val{font-size:20px;font-weight:600;color:#ffffff}
-.kpi-sub{font-size:11px;color:#6b7280;margin-top:2px}
-.section{background:#1a1d2e;border:0.5px solid #2a2d3e;border-radius:12px;padding:16px;margin-bottom:12px}
-.sec-title{font-size:13px;font-weight:600;color:#ffffff;margin-bottom:2px}
-.sec-sub{font-size:11px;color:#6b7280;margin-bottom:14px}
+.kpi{background:var(--color-bg-surface);border-radius:8px;padding:12px 14px}
+.kpi-label{font-size:11px;color:var(--color-text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.kpi-val{font-size:20px;font-weight:600;color:var(--color-text)}
+.kpi-sub{font-size:11px;color:var(--color-text-muted);margin-top:2px}
+.section{background:var(--color-bg-surface);border:0.5px solid var(--color-border);border-radius:12px;padding:16px;margin-bottom:12px}
+.sec-title{font-size:13px;font-weight:600;color:var(--color-text);margin-bottom:2px}
+.sec-sub{font-size:11px;color:var(--color-text-muted);margin-bottom:14px}
 .badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:600;white-space:nowrap}
-.tbl-wrap{border:0.5px solid #2a2d3e;border-radius:12px;overflow:hidden;margin-bottom:12px}
+.tbl-wrap{border:0.5px solid var(--color-border);border-radius:12px;overflow:hidden;margin-bottom:12px}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{padding:8px 12px;font-size:11px;font-weight:600;color:#6b7280;background:#1a1d2e;
-   border-bottom:0.5px solid #2a2d3e;text-align:left;white-space:nowrap;
+th{padding:8px 12px;font-size:11px;font-weight:600;color:var(--color-text-muted);background:var(--color-bg-surface);
+   border-bottom:0.5px solid var(--color-border);text-align:left;white-space:nowrap;
    cursor:pointer;user-select:none;text-transform:uppercase;letter-spacing:.04em}
-th:hover{color:#e2e8f0}
+th:hover{color:var(--color-text)}
 th.r,td.r{text-align:right}
-td{padding:7px 12px;border-bottom:0.5px solid #2a2d3e;color:#e2e8f0 !important;vertical-align:middle;background:#1a1d2e !important}
-td.mono{font-family:monospace;font-size:11px;color:#e2e8f0 !important;
+td{padding:7px 12px;border-bottom:0.5px solid var(--color-border);color:var(--color-text) !important;vertical-align:middle;background:var(--color-bg-surface) !important}
+td.mono{font-family:monospace;font-size:11px;color:var(--color-text) !important;
         max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#1a1d2e !important}
+tr:hover td{background:var(--color-bg-surface) !important}
 .filter-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .search-inp{flex:1;min-width:140px;padding:6px 10px;font-size:12px;
-            border:0.5px solid #2a2d3e;border-radius:8px;background:#1a1d2e;color:#e2e8f0}
-.filter-sel{padding:6px 10px;font-size:12px;border:0.5px solid #2a2d3e;
-            border-radius:8px;background:#1a1d2e;color:#e2e8f0;cursor:pointer}
-.result-count{font-size:11px;color:#6b7280;white-space:nowrap}
+            border:0.5px solid var(--color-border);border-radius:8px;background:var(--color-bg-surface);color:var(--color-text)}
+.filter-sel{padding:6px 10px;font-size:12px;border:0.5px solid var(--color-border);
+            border-radius:8px;background:var(--color-bg-surface);color:var(--color-text);cursor:pointer}
+.result-count{font-size:11px;color:var(--color-text-muted);white-space:nowrap}
 .pg-wrap{display:flex;align-items:center;gap:6px;justify-content:center;padding:4px 0}
-.pg-btn{padding:5px 10px;font-size:12px;border:0.5px solid #2a2d3e;border-radius:8px;
-        background:#1a1d2e;color:#6b7280;cursor:pointer;min-width:32px;text-align:center}
-.pg-btn:hover:not(:disabled){background:#1a1d2e;color:#e2e8f0}
+.pg-btn{padding:5px 10px;font-size:12px;border:0.5px solid var(--color-border);border-radius:8px;
+        background:var(--color-bg-surface);color:var(--color-text-muted);cursor:pointer;min-width:32px;text-align:center}
+.pg-btn:hover:not(:disabled){background:var(--color-bg-surface);color:var(--color-text)}
 .pg-btn:disabled{opacity:.4;cursor:not-allowed}
-.pg-btn.active{background:#00e5a0;color:#000;border-color:#00e5a0}
-.pg-info{font-size:11px;color:#6b7280;margin:0 4px}
-.per-pg{font-size:11px;color:#6b7280;display:flex;align-items:center;gap:6px;margin-left:auto}
+.pg-btn.active{background:var(--color-accent);color:#000;border-color:var(--color-accent)}
+.pg-info{font-size:11px;color:var(--color-text-muted);margin:0 4px}
+.per-pg{font-size:11px;color:var(--color-text-muted);display:flex;align-items:center;gap:6px;margin-left:auto}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.bar-label{font-size:11px;color:#6b7280;text-align:right;flex-shrink:0;
+.bar-label{font-size:11px;color:var(--color-text-muted);text-align:right;flex-shrink:0;
            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;border-radius:3px;overflow:hidden;position:relative;background:#2a2d3e}
+.bar-track{flex:1;border-radius:3px;overflow:hidden;position:relative;background:var(--color-border)}
 .bar-fill{height:100%;border-radius:3px;min-width:2px}
 .bar-val{font-size:10px;font-weight:600;white-space:nowrap;
          position:absolute;right:6px;top:50%;transform:translateY(-50%)}
-.share-bar{width:50px;height:4px;background:#2a2d3e;border-radius:2px;
+.share-bar{width:50px;height:4px;background:var(--color-border);border-radius:2px;
            overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px}
 .share-fill{height:100%;border-radius:2px}
 .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;
               align-items:center;justify-content:center;pointer-events:none}
-.donut-center-val{font-size:18px;font-weight:700;color:#ffffff}
-.donut-center-lbl{font-size:10px;color:#6b7280}
+.donut-center-val{font-size:18px;font-weight:700;color:var(--color-text)}
+.donut-center-lbl{font-size:10px;color:var(--color-text-muted)}
 .legend-item{display:flex;align-items:center;gap:6px;padding:3px 0;
-             font-size:11px;color:#6b7280}
+             font-size:11px;color:var(--color-text-muted)}
 .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.legend-pct{margin-left:auto;font-size:11px;font-weight:600;color:#e2e8f0}
+.legend-pct{margin-left:auto;font-size:11px;font-weight:600;color:var(--color-text)}
 .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-.dot-up{background:#22c55e}.dot-down{background:#ef4444}
-.dot-warn{background:#f59e0b}.dot-loading{background:#6b7280}
+.dot-up{background:var(--color-success)}.dot-down{background:var(--color-danger)}
+.dot-warn{background:var(--color-warning)}.dot-loading{background:var(--color-text-muted)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .dot-loading{animation:pulse 1s ease-in-out infinite}
 </style>
@@ -518,15 +547,15 @@ def architecture_section_html(project_totals: Dict[str, Totals],
 <div class="tab-section">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
   <div>
-    <div style="font-size:15px;font-weight:600;color:#ffffff">OmniBioAI ecosystem</div>
-    <div style="font-size:12px;color:#6b7280;margin-top:2px">Click any node to see live health, latency and metrics</div>
+    <div style="font-size:15px;font-weight:600;color:var(--color-text)">OmniBioAI ecosystem</div>
+    <div style="font-size:12px;color:var(--color-text-muted);margin-top:2px">Click any node to see live health, latency and metrics</div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border-radius:99px;background:#1a1d2e;border:0.5px solid #2a2d3e;color:#6b7280">
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border-radius:99px;background:var(--color-bg-surface);border:0.5px solid var(--color-border);color:var(--color-text-muted)">
       <span class="status-dot dot-loading" id="g-dot"></span>
       <span id="g-status">fetching...</span>
     </div>
-    <button onclick="fetchH()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:0.5px solid #2a2d3e;border-radius:8px;background:#1a1d2e;font-size:12px;color:#6b7280;cursor:pointer">
+    <button onclick="fetchH()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:0.5px solid var(--color-border);border-radius:8px;background:var(--color-bg-surface);font-size:12px;color:var(--color-text-muted);cursor:pointer">
       ↻ refresh
     </button>
   </div>
@@ -603,34 +632,34 @@ def architecture_section_html(project_totals: Dict[str, Totals],
 </div>
 
 <!-- DETAIL PANEL -->
-<div id="det-panel" style="display:none;border:0.5px solid #2a2d3e;border-radius:12px;background:#1a1d2e;overflow:hidden;margin-bottom:12px">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid #2a2d3e">
+<div id="det-panel" style="display:none;border:0.5px solid var(--color-border);border-radius:12px;background:var(--color-bg-surface);overflow:hidden;margin-bottom:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--color-border)">
     <div>
-      <div style="font-size:14px;font-weight:600;color:#ffffff" id="det-name">—</div>
-      <div style="font-size:11px;color:#6b7280;margin-top:2px" id="det-lane">—</div>
+      <div style="font-size:14px;font-weight:600;color:var(--color-text)" id="det-name">—</div>
+      <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px" id="det-lane">—</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <a id="det-open" style="display:none;font-size:11px;padding:3px 8px;border:0.5px solid #2a2d3e;border-radius:6px;background:rgba(0,148,255,0.1);color:#0094ff;text-decoration:none" target="_blank">open UI ↗</a>
-      <button onclick="document.getElementById('det-panel').style.display='none'" style="padding:4px 10px;border:0.5px solid #2a2d3e;border-radius:6px;background:transparent;font-size:11px;color:#6b7280;cursor:pointer">close</button>
+      <a id="det-open" style="display:none;font-size:11px;padding:3px 8px;border:0.5px solid var(--color-border);border-radius:6px;background:var(--color-info-dim);color:var(--color-info);text-decoration:none" target="_blank">open UI ↗</a>
+      <button onclick="document.getElementById('det-panel').style.display='none'" style="padding:4px 10px;border:0.5px solid var(--color-border);border-radius:6px;background:transparent;font-size:11px;color:var(--color-text-muted);cursor:pointer">close</button>
     </div>
   </div>
   <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-    <div><div style="font-size:11px;color:#6b7280;margin-bottom:3px">health status</div><div style="font-size:13px;font-weight:600" id="det-status">—</div></div>
-    <div><div style="font-size:11px;color:#6b7280;margin-bottom:3px">latency</div><div style="font-size:13px" id="det-lat">—</div></div>
-    <div><div style="font-size:11px;color:#6b7280;margin-bottom:3px">port</div><div style="font-size:13px;font-weight:600" id="det-port">—</div></div>
-    <div><div style="font-size:11px;color:#6b7280;margin-bottom:3px">message</div><div style="font-size:12px;color:#6b7280" id="det-msg">—</div></div>
+    <div><div style="font-size:11px;color:var(--color-text-muted);margin-bottom:3px">health status</div><div style="font-size:13px;font-weight:600" id="det-status">—</div></div>
+    <div><div style="font-size:11px;color:var(--color-text-muted);margin-bottom:3px">latency</div><div style="font-size:13px" id="det-lat">—</div></div>
+    <div><div style="font-size:11px;color:var(--color-text-muted);margin-bottom:3px">port</div><div style="font-size:13px;font-weight:600" id="det-port">—</div></div>
+    <div><div style="font-size:11px;color:var(--color-text-muted);margin-bottom:3px">message</div><div style="font-size:12px;color:var(--color-text-muted)" id="det-msg">—</div></div>
     <div style="grid-column:1/-1">
-      <div style="font-size:11px;color:#6b7280;margin-bottom:4px">description</div>
-      <div style="font-size:12px;color:#6b7280" id="det-desc">—</div>
+      <div style="font-size:11px;color:var(--color-text-muted);margin-bottom:4px">description</div>
+      <div style="font-size:12px;color:var(--color-text-muted)" id="det-desc">—</div>
     </div>
   </div>
 </div>
 
-<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 0;border-top:0.5px solid #2a2d3e">
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 0;border-top:0.5px solid var(--color-border)">
   <div class="legend-item"><span class="legend-dot" style="background:#3B6D11;border-radius:50%"></span>healthy</div>
   <div class="legend-item"><span class="legend-dot" style="background:#A32D2D;border-radius:50%"></span>down</div>
   <div class="legend-item"><span class="legend-dot" style="background:#888780;border-radius:50%"></span>not monitored</div>
-  <div style="margin-left:auto;font-size:11px;color:#6b7280">live from <code style="font-size:10px">/summary</code> · auto-refreshes every 30s</div>
+  <div style="margin-left:auto;font-size:11px;color:var(--color-text-muted)">live from <code style="font-size:10px">/summary</code> · auto-refreshes every 30s</div>
 </div>
 </div>
 
@@ -690,7 +719,7 @@ def _arch_node(name: str, desc: str, port: Optional[str],
     port_js = f"'{port}'" if port else "null"
     short = name.replace("omnibioai-", "").replace("omnibioai", "omnibioai")
     return f"""<div onclick="showDet('{name}','{color} lane','{desc}',{port_js},{ui_js})"
-  style="border-radius:8px;border:0.5px solid {c['stroke']};background:#1a1d2e;
+  style="border-radius:8px;border:0.5px solid {c['stroke']};background:var(--color-bg-surface);
          padding:8px 10px;margin-bottom:6px;cursor:pointer;
          transition:transform .15s;position:relative"
   onmouseover="this.style.transform='translateY(-1px)'"
@@ -700,7 +729,7 @@ def _arch_node(name: str, desc: str, port: Optional[str],
     <span style="font-size:11px;font-weight:600;color:{c['text']}">{short}</span>
     <span class="status-dot dot-loading" id="nd-{name}"></span>
   </div>
-  <div style="font-size:10px;color:#6b7280;line-height:1.3">{desc}{(' · :'+port) if port else ''}</div>
+  <div style="font-size:10px;color:var(--color-text-muted);line-height:1.3">{desc}{(' · :'+port) if port else ''}</div>
 </div>"""
 
 # ── TAB 2: PROJECTS ────────────────────────────────────────────────────────────
@@ -934,10 +963,10 @@ def languages_section_html(language_totals: Dict[str, Totals], grand: Totals) ->
     max_code = langs[0][1].code if langs else 1
 
     type_cards = "".join(
-        f'<div style="background:#1a1d2e;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px">'
+        f'<div style="background:var(--color-bg-surface);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px">'
         f'<div style="width:32px;height:32px;border-radius:8px;background:{LANG_TYPE_META[k]["bg"]};display:flex;align-items:center;justify-content:center;font-size:16px">{LANG_TYPE_META[k]["icon"]}</div>'
-        f'<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#ffffff">{LANG_TYPE_META[k]["label"]}</div>'
-        f'<div style="font-size:11px;color:#6b7280">{fmt_int(type_totals[k])} LOC</div></div>'
+        f'<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--color-text)">{LANG_TYPE_META[k]["label"]}</div>'
+        f'<div style="font-size:11px;color:var(--color-text-muted)">{fmt_int(type_totals[k])} LOC</div></div>'
         f'<div style="font-size:14px;font-weight:700;color:{LANG_TYPE_META[k]["color"]}">{round(100*type_totals[k]/total_code,1)}%</div>'
         f'</div>'
         for k in type_order
@@ -1103,7 +1132,7 @@ def coverage_section_html(df: pd.DataFrame, timestamp: str) -> str:
 
     return f"""
 <div class="tab-section">
-<div style="font-size:12px;color:#6b7280;margin-bottom:12px">best-effort pytest collection · {timestamp}</div>
+<div style="font-size:12px;color:var(--color-text-muted);margin-bottom:12px">best-effort pytest collection · {timestamp}</div>
 <div class="kpi-row">
   <div class="kpi"><div class="kpi-label">repos scanned</div><div class="kpi-val">{len(df)}</div><div class="kpi-sub">full ecosystem</div></div>
   <div class="kpi"><div class="kpi-label">with data</div><div class="kpi-val">{covered}</div><div class="kpi-sub">coverage collected</div></div>
@@ -1251,14 +1280,14 @@ def health_section_html(health: EcosystemHealth, control_center_url: str) -> str
     cc_url = control_center_url.rstrip("/")
     return f"""
 <div class="tab-section">
-<div id="hlth-banner" style="border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;border:0.5px solid #2a2d3e;background:#1a1d2e">
+<div id="hlth-banner" style="border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;border:0.5px solid var(--color-border);background:var(--color-bg-surface)">
   <span class="status-dot dot-loading" id="hlth-dot"></span>
   <div style="flex:1">
-    <div style="font-size:13px;font-weight:600;color:#ffffff" id="hlth-title">fetching health data...</div>
-    <div style="font-size:11px;color:#6b7280;margin-top:2px" id="hlth-sub">connecting to control center</div>
+    <div style="font-size:13px;font-weight:600;color:var(--color-text)" id="hlth-title">fetching health data...</div>
+    <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px" id="hlth-sub">connecting to control center</div>
   </div>
-  <span style="font-size:11px;color:#6b7280" id="hlth-countdown">next refresh in 30s</span>
-  <button onclick="hlthFetch()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:0.5px solid #2a2d3e;border-radius:8px;background:#1a1d2e;font-size:12px;color:#6b7280;cursor:pointer">↻ refresh</button>
+  <span style="font-size:11px;color:var(--color-text-muted)" id="hlth-countdown">next refresh in 30s</span>
+  <button onclick="hlthFetch()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:0.5px solid var(--color-border);border-radius:8px;background:var(--color-bg-surface);font-size:12px;color:var(--color-text-muted);cursor:pointer">↻ refresh</button>
 </div>
 
 <div class="kpi-row">
@@ -1292,16 +1321,16 @@ def health_section_html(health: EcosystemHealth, control_center_url: str) -> str
   </div>
 </div>
 
-<div style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">services</div>
+<div style="font-size:11px;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">services</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-bottom:12px" id="hlth-svc-grid">
-  <div style="font-size:12px;color:#6b7280;grid-column:1/-1">loading service cards...</div>
+  <div style="font-size:12px;color:var(--color-text-muted);grid-column:1/-1">loading service cards...</div>
 </div>
 
 <div class="section">
   <div class="sec-title">disk checks</div>
   <div class="sec-sub">storage paths monitored by control center</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px" id="hlth-disk-grid">
-    <div style="font-size:12px;color:#6b7280">loading...</div>
+    <div style="font-size:12px;color:var(--color-text-muted)">loading...</div>
   </div>
 </div>
 </div>
@@ -1702,31 +1731,31 @@ def build_report(out_html: Path, title: str, timestamp: str,
   {_CHARTJS}
   {SHARED_CSS}
   <style>
-    body {{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#0f1117;color:#ffffff;min-height:100vh}}
+    body {{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-text);min-height:100vh}}
     .page {{max-width:1400px;margin:0 auto;padding:24px 24px 48px}}
-    .hero {{background:rgba(0,229,160,0.05);border:0.5px solid rgba(0,229,160,0.15);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}}
-    .hero-title {{font-size:22px;font-weight:700;color:#ffffff;margin-bottom:4px}}
-    .hero-sub {{font-size:13px;color:#e2e8f0}}
-    .hero-ts {{font-size:11px;color:#6b7280;margin-top:4px}}
+    .hero {{background:var(--color-bg-surface);border:0.5px solid var(--color-border);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}}
+    .hero-title {{font-size:22px;font-weight:500;color:var(--color-text);margin-bottom:4px}}
+    .hero-sub {{font-size:13px;color:var(--color-text)}}
+    .hero-ts {{font-size:11px;color:var(--color-text-muted);margin-top:4px}}
     .hero-right {{display:flex;align-items:center;gap:8px;flex-wrap:wrap}}
-    .regen-btn {{display:flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;background:#00e5a0;color:#000;font-size:13px;font-weight:600;border:none;cursor:pointer;text-decoration:none}}
-    .regen-btn:hover {{background:#1e293b}}
+    .regen-btn {{display:flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;background:var(--color-accent);color:#000;font-size:13px;font-weight:600;border:none;cursor:pointer;text-decoration:none}}
+    .regen-btn:hover {{background:var(--color-bg-surface2)}}
     .status-badge {{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:12px;font-weight:600}}
     .sb-up {{background:#EAF3DE;color:#3B6D11}}
     .sb-down {{background:#FCEBEB;color:#A32D2D}}
     .sb-warn {{background:#FAEEDA;color:#854F0B}}
     .sb-unknown {{background:#F1EFE8;color:#444441}}
     .global-kpi {{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}}
-    .gk {{background:#1a1d2e;border:0.5px solid #2a2d3e;border-radius:10px;padding:12px 18px;flex:1;min-width:100px}}
-    .gk-lbl {{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}}
-    .gk-val {{font-size:20px;font-weight:700;color:#ffffff}}
-    .tab-nav {{display:flex;gap:0;border-bottom:1px solid #2a2d3e;margin-bottom:0;background:#1a1d2e;border-radius:12px 12px 0 0;padding:0 4px}}
-    .tab-btn {{padding:12px 20px;font-size:13px;font-weight:600;color:#6b7280;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;margin-bottom:-1px;font-family:inherit}}
-    .tab-btn:hover {{color:#e2e8f0}}
-    .tab-btn.active {{color:#ffffff;border-bottom-color:#ffffff}}
-    .tab-panel {{display:none;background:#1a1d2e;border:1px solid #2a2d3e;border-top:none;border-radius:0 0 12px 12px;padding:0 20px}}
+    .gk {{background:var(--color-bg-surface);border:0.5px solid var(--color-border);border-radius:10px;padding:12px 18px;flex:1;min-width:100px}}
+    .gk-lbl {{font-size:11px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}}
+    .gk-val {{font-size:24px;font-weight:500;color:var(--color-text)}}
+    .tab-nav {{display:flex;gap:0;border-bottom:1px solid var(--color-border);margin-bottom:0;background:var(--color-bg-surface);border-radius:12px 12px 0 0;padding:0 4px}}
+    .tab-btn {{padding:12px 20px;font-size:13px;font-weight:600;color:var(--color-text-muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;margin-bottom:-1px;font-family:inherit}}
+    .tab-btn:hover {{color:var(--color-text)}}
+    .tab-btn.active {{color:var(--color-text);border-bottom-color:var(--color-accent)}}
+    .tab-panel {{display:none;background:var(--color-bg-surface);border:1px solid var(--color-border);border-top:none;border-radius:0 0 12px 12px;padding:0 20px}}
     .tab-panel.active {{display:block}}
-    .footer {{margin-top:24px;padding-top:16px;border-top:0.5px solid #2a2d3e;font-size:11px;color:#6b7280;line-height:1.8}}
+    .footer {{margin-top:24px;padding-top:16px;border-top:0.5px solid var(--color-border);font-size:11px;color:var(--color-text-muted);line-height:1.8}}
   </style>
 </head>
 <body>
@@ -1743,7 +1772,7 @@ def build_report(out_html: Path, title: str, timestamp: str,
         <span class="status-dot dot-loading" id="global-health-dot"></span>
         <span id="global-health-text">checking...</span>
       </div>
-      <span style="font-size:12px;color:#6b7280" id="global-health-ts"></span>
+      <span style="font-size:12px;color:var(--color-text-muted)" id="global-health-ts"></span>
     </div>
   </div>
 
