@@ -37,6 +37,101 @@ services:
     url: http://rag:8096/docs
     timeout_s: 10
     ui_url: http://192.168.86.234:8090
+  ollama:
+    type: http
+    url: http://ollama:11434/
+    timeout_s: 5
+    ui_url: http://192.168.86.234:11434
+  auth-service:
+    type: http
+    url: http://auth-service:8001/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8001
+  policy-engine:
+    type: http
+    url: http://policy-engine:8002/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8002
+  hpc-policy-engine:
+    type: http
+    url: http://hpc-policy-engine:8003/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8003
+  security-audit:
+    type: http
+    url: http://security-audit:8004/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8004
+  api-gateway:
+    type: http
+    url: http://api-gateway:8080/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8080
+  workflow-bundles:
+    type: http
+    url: http://workflow-bundles:8098/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8098
+  tool-images:
+    type: http
+    url: http://tool-images:8097/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8097
+  dev-hub:
+    type: http
+    url: http://dev-hub:8082/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8082
+  launcher:
+    type: http
+    url: http://launcher:5190/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:5190
+  jupyter:
+    type: http
+    url: http://jupyter:8888/api
+    timeout_s: 5
+    ui_url: http://192.168.86.234:8888
+  rstudio:
+    type: http
+    url: http://rstudio:8787/auth-sign-in
+    timeout_s: 5
+    ui_url: http://192.168.86.234:8787
+  vscode:
+    type: http
+    url: http://vscode:8080/healthz
+    timeout_s: 5
+    ui_url: http://192.168.86.234:8083
+  videos:
+    type: http
+    url: http://videos:8086/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8086
+  opa:
+    type: http
+    url: http://opa:8181/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8181
+  prometheus:
+    type: http
+    url: http://prometheus:9090/-/healthy
+    timeout_s: 2
+    ui_url: http://192.168.86.234:9091
+  grafana:
+    type: http
+    url: http://grafana:3000/api/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:3000
+  nginx-router:
+    type: http
+    url: http://nginx-router:80/
+    timeout_s: 2
+    ui_url: http://192.168.86.234:80
+  license-server:
+    type: http
+    url: http://license-server:8099/health
+    timeout_s: 2
+    ui_url: http://192.168.86.234:8099
 system:
   disk_checks:
     - path: /workspace
