@@ -19,8 +19,11 @@ sentry_sdk.init(
     release=os.environ.get("SENTRY_RELEASE", "0.2.0-beta"),
     send_default_pii=False,
 )
+import json as _json_mod
+import logging
 import subprocess
 import threading
+import time as _time_mod
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -35,6 +38,32 @@ from control_center.api.routes_health import router as health_router
 from control_center.api.routes_report import router as report_router
 from control_center.api.routes_services import router as services_router
 from control_center.api.routes_summary import router as summary_router
+
+
+# ── Structured JSON logger ────────────────────────────────────────────────────
+class _JsonFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        return _json_mod.dumps({
+            "ts":      self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level":   record.levelname,
+            "logger":  record.name,
+            "msg":     record.getMessage(),
+            "module":  record.module,
+            **(record.__dict__.get("extra_fields", {})),
+        })
+
+
+def _setup_logging() -> logging.Logger:
+    handler = logging.StreamHandler()
+    handler.setFormatter(_JsonFormatter())
+    root = logging.getLogger()
+    root.handlers = [handler]
+    root.setLevel(logging.INFO)
+    return logging.getLogger("control_center")
+
+
+log = _setup_logging()
+
 
 app = FastAPI(
     title="OmniBioAI Control Center",
@@ -446,10 +475,13 @@ def _reset_job_to_idle(delay_s: int = 5) -> None:
 
 def _run_report_job() -> None:
     workspace = _workspace_root()
+    log.info("report_job_started", extra={"extra_fields": {"workspace": str(workspace)}})
     script = workspace / "omnibioai-control-center" / "scripts" / "generate_report.py"
 
     if not script.exists():
-        _job.fail(f"Report script not found: {script}")
+        msg = f"Report script not found: {script}"
+        _job.fail(msg)
+        log.error("report_job_failed", extra={"extra_fields": {"error": msg}})
         threading.Thread(target=_reset_job_to_idle, daemon=True).start()
         return
 
@@ -467,13 +499,20 @@ def _run_report_job() -> None:
             timeout=600,
         )
         if proc.returncode == 0:
-            _job.finish(proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else "Done")
+            last_line = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else "Done"
+            _job.finish(last_line)
+            log.info("report_job_finished", extra={"extra_fields": {"output": last_line}})
         else:
-            _job.fail(proc.stderr.strip() or proc.stdout.strip() or "Unknown error")
+            msg = proc.stderr.strip() or proc.stdout.strip() or "Unknown error"
+            _job.fail(msg)
+            log.error("report_job_failed", extra={"extra_fields": {"error": msg}})
     except subprocess.TimeoutExpired:
         _job.fail("Report generation timed out after 10 minutes")
+        log.error("report_job_timeout")
     except Exception as e:
-        _job.fail(f"{type(e).__name__}: {e}")
+        msg = f"{type(e).__name__}: {e}"
+        _job.fail(msg)
+        log.error("report_job_failed", extra={"extra_fields": {"error": msg}})
 
     # Reset to idle after 30s so subsequent page loads don't see 'done'
     # and trigger another reload loop.
@@ -483,6 +522,7 @@ def _run_report_job() -> None:
 @app.post("/report/generate")
 def report_generate() -> JSONResponse:
     """Trigger background report generation. Returns 409 if already running."""
+    log.info("report_generate_requested")
     if _job.as_dict()["status"] == "running":
         return JSONResponse({"error": "Report generation already in progress"}, status_code=409)
     _job.start()
@@ -516,6 +556,48 @@ def report_status() -> JSONResponse:
     else:
         state["report_generated_at"] = None
     return JSONResponse(state)
+
+
+# ==============================================================================
+# Scheduled report generation
+# ==============================================================================
+
+REPORT_SCHEDULE_HOURS = float(os.environ.get("REPORT_SCHEDULE_HOURS", "6"))
+
+
+def _scheduler_loop() -> None:
+    """Background thread — triggers report generation every N hours.
+    First run is delayed by REPORT_SCHEDULE_HOURS so startup is clean.
+    Skips if a job is already running.
+    """
+    log.info("report_scheduler_started", extra={"extra_fields": {
+        "interval_hours": REPORT_SCHEDULE_HOURS,
+        "first_run_in_hours": REPORT_SCHEDULE_HOURS,
+    }})
+    _time_mod.sleep(REPORT_SCHEDULE_HOURS * 3600)
+    while True:
+        try:
+            if _job.as_dict()["status"] != "running":
+                log.info("report_scheduler_triggering")
+                _job.start()
+                thread = threading.Thread(target=_run_report_job, daemon=True)
+                thread.start()
+            else:
+                log.info("report_scheduler_skipped_already_running")
+        except Exception as e:
+            log.error("report_scheduler_error", extra={"extra_fields": {"error": str(e)}})
+        _time_mod.sleep(REPORT_SCHEDULE_HOURS * 3600)
+
+
+@app.on_event("startup")
+async def on_startup() -> None:
+    log.info("control_center_started", extra={"extra_fields": {
+        "workspace": str(_workspace_root()),
+        "port": os.environ.get("CONTROL_CENTER_PORT", "7070"),
+        "report_schedule_hours": REPORT_SCHEDULE_HOURS,
+    }})
+    scheduler = threading.Thread(target=_scheduler_loop, daemon=True)
+    scheduler.start()
 
 
 # ==============================================================================
