@@ -61,6 +61,13 @@ REPOS = [
     "omnibioai-videos",
 ]
 
+# Repos that need more than the default 300s timeout
+REPO_TIMEOUTS: Dict[str, int] = {
+    "omnibioai": 1800,   # 30 min — 80+ plugins each with tests
+}
+
+DEFAULT_TIMEOUT = 300
+
 
 # --------------------------------------------------------------------------- #
 # Helpers — mirrors generate_report.py logic so results are consistent
@@ -190,7 +197,7 @@ def _resolve_repo(root: Path, name: str) -> Path:
 # Per-repo runner
 # --------------------------------------------------------------------------- #
 
-def run_repo(repo: Path) -> Dict[str, Any]:
+def run_repo(repo: Path, timeout_override: int | None = None) -> Dict[str, Any]:
     result: Dict[str, Any] = {
         "repo":             repo.name,
         "path":             str(repo),
@@ -238,10 +245,11 @@ def run_repo(repo: Path) -> Dict[str, Any]:
         "--continue-on-collection-errors",
         "--ignore=node_modules",
     ]
-    print(f"    pytest {' '.join(cov_args)} …", end=" ", flush=True)
+    timeout = timeout_override or REPO_TIMEOUTS.get(repo.name, DEFAULT_TIMEOUT)
+    print(f"    pytest {' '.join(cov_args)} (timeout={timeout}s) …", end=" ", flush=True)
     proc = subprocess.run(
         cmd, cwd=str(cwd), env=env,
-        capture_output=True, text=True, timeout=300,
+        capture_output=True, text=True, timeout=timeout,
     )
     print(f"rc={proc.returncode}")
 
@@ -286,6 +294,10 @@ def main() -> int:
         "--repos", nargs="+", default=None,
         help="Repo names to process (default: all)",
     )
+    parser.add_argument(
+        "--timeout", type=int, default=None,
+        help="Override timeout in seconds for all repos (default: per-repo config)",
+    )
     args = parser.parse_args()
 
     root     = args.root.resolve()
@@ -303,7 +315,7 @@ def main() -> int:
         repo = _resolve_repo(root, name)
         print(f"[{repo.name}]")
 
-        result  = run_repo(repo)
+        result  = run_repo(repo, timeout_override=args.timeout)
         out_f   = out_dir / f"{repo.name}.json"
         out_f.write_text(json.dumps(result, indent=2), encoding="utf-8")
 
