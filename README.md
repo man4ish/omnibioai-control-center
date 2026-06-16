@@ -1,19 +1,23 @@
 # OmniBioAI Control Center
 
-**Operational health dashboard and ecosystem report server for the OmniBioAI stack.**
+**Operational health dashboard, ecosystem report server, and observability hub for the OmniBioAI stack.**
 
-The Control Center is a lightweight FastAPI service that aggregates health status across all OmniBioAI components and serves the interactive ecosystem report covering architecture, codebase statistics, code coverage, and live service health.
+The Control Center is a FastAPI service that aggregates health status across all OmniBioAI components, serves an interactive ecosystem report, exposes Prometheus metrics, and auto-generates reports on a configurable schedule.
 
 ---
 
 ## What It Does
 
 - **Health monitoring** — TCP, HTTP, and disk checks across all ecosystem services
-- **Live dashboard** — auto-refreshing browser UI at `/` with per-service status cards
-- **Ecosystem report** — interactive HTML report (architecture · projects · languages · coverage · health) served at `/report`
+- **Live dashboard** — auto-refreshing browser UI at `/dashboard` with per-service status cards
+- **Ecosystem report** — interactive HTML report (architecture · projects · languages · coverage · health) served at `/`
 - **JSON API** — machine-readable health summary at `/summary` for CI/CD and external monitoring
+- **Scheduled report generation** — auto-regenerates the ecosystem report every N hours (configurable via REPORT_SCHEDULE_HOURS)
+- **Prometheus metrics** — `/metrics` endpoint scraped by Prometheus for Grafana dashboards
+- **Docker inventory** — platform containers, tool SIF images, and plugin Docker images via `/docker/*` endpoints
+- **Structured JSON logging** — all key events logged as JSON to stdout for log aggregation
 
-## Architecure
+## Architecture
 
 ![Architecture](images/OmniBioAI_ecosystem_architecture_diagram.png)
 ---
@@ -62,13 +66,20 @@ omnibioai-control-center/
 
 ## API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Live health dashboard (auto-refreshes every 10s) |
-| `/health` | GET | Control Center self-check |
-| `/services` | GET | Per-service health status (JSON) |
-| `/summary` | GET | Full ecosystem summary — services + disk (JSON) |
-| `/report` | GET | Pre-generated ecosystem HTML report |
+| Endpoint               | Method | Description |
+|------------------------|--------|-------------|
+| `/`                    | GET    | Ecosystem report (auto-refreshes) |
+| `/dashboard`           | GET    | Live health dashboard UI |
+| `/health`              | GET    | Control Center self-check |
+| `/services`            | GET    | Per-service health status (JSON) |
+| `/summary`             | GET    | Full ecosystem summary — services + disk (JSON) |
+| `/report/generate`     | POST   | Trigger background report generation |
+| `/report/status`       | GET    | Poll report job state (running/done/error/idle) |
+| `/report/data`         | GET    | Structured report data as JSON |
+| `/docker/containers`   | GET    | Platform container list with status |
+| `/docker/sif-images`   | GET    | Tool SIF image inventory and sizes |
+| `/docker/plugin-images`| GET    | Plugin Docker image inventory |
+| `/metrics`             | GET    | Prometheus metrics endpoint |
 
 ### `/health`
 
@@ -206,7 +217,13 @@ docker compose \
   up -d
 ```
 
-Access at: `http://localhost:7070`
+Access at: `http://localhost/_svc/control` (JWT required)
+
+For local scripts and Prometheus scraping (localhost only):
+`http://127.0.0.1:7070`
+
+> **Note:** Port 7070 is bound to `127.0.0.1` only in production.
+> External access requires a valid JWT via the nginx reverse proxy.
 
 ### Standalone (development)
 
@@ -221,10 +238,12 @@ uvicorn control_center.main:app --host 0.0.0.0 --port 7070 --reload
 
 ### Environment variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable                | Default                       | Description |
+|-------------------------|-------------------------------|-------------|
 | `CONTROL_CENTER_CONFIG` | `/config/control_center.yaml` | Path to YAML config |
-| `WORKSPACE_ROOT` | `/workspace` | Ecosystem root — used to locate the report file |
+| `WORKSPACE_ROOT`        | `/workspace`                  | Ecosystem root |
+| `CONTROL_CENTER_PORT`   | `7070`                        | Service port |
+| `REPORT_SCHEDULE_HOURS` | `6`                           | Auto-regenerate report every N hours |
 
 ---
 
@@ -283,7 +302,7 @@ pip install pytest pytest-cov
 
 - **File:** `~/Desktop/machine/out/reports/omnibioai_ecosystem_report.html`
 - **Browser:** Open directly — no server needed
-- **Live:** `http://localhost:7070/report` when Control Center is running
+- **Live:** `http://localhost/_svc/control` when Control Center is running
 
 The report generates gracefully even if the Control Center is offline or coverage collection fails — those tabs show a clear unavailable state rather than breaking the whole report.
 
@@ -317,21 +336,20 @@ Tests use in-process HTTP servers — no external dependencies or running servic
 - **Zero mandatory cloud** — runs fully offline and air-gapped
 - **Minimal dependencies** — FastAPI, uvicorn, PyYAML, pydantic only
 - **stdlib HTTP in report** — `urllib` used for health fetching in report generator, no extra deps
+- **Design-token driven** — CSS uses `@man4ish/design-tokens` vocabulary; zero hardcoded hex values in the report or dashboard
+- **Structured logging** — all key events (startup, report triggered/finished/failed, scheduler) emitted as JSON to stdout
 
 ---
 
 ## Planned Enhancements (Post-Beta)
 
-- Prometheus metrics endpoint (`/metrics`)
-- Scheduled report generation via cron or Celery
 - Historical uptime tracking
 - Alert hooks (Slack, email)
-- Authentication layer for the dashboard
 - Trend view — coverage and health over time
 
 ---
 
-## Current Status — v0.1.0
+## Current Status — v0.2.0
 
 | Feature | Status |
 |---------|--------|
@@ -347,8 +365,16 @@ Tests use in-process HTTP servers — no external dependencies or running servic
 | Ecosystem report — Health tab | ✓ Stable |
 | Unit tests | ✓ Stable |
 | Docker Compose deployment | ✓ Stable |
-| Prometheus metrics | Planned |
+| Prometheus metrics (/metrics) | ✓ Stable |
+| Scheduled report generation | ✓ Stable |
+| JWT authentication (via nginx) | ✓ Stable |
+| Background report job API | ✓ Stable |
+| Docker inventory endpoints | ✓ Stable |
+| Structured JSON logging | ✓ Stable |
+| Design token CSS alignment | ✓ Stable |
 | Historical tracking | Planned |
+| Alert hooks (Slack, email) | Planned |
+| Trend view | Planned |
 
 ---
 
