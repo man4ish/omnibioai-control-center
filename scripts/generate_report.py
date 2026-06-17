@@ -21,7 +21,7 @@ Options
 -------
 --root PATH              ecosystem root (default: auto-detect)
 --health-url URL         default http://127.0.0.1:7070 (alias: --control-center-url)
---out RELPATH            default work/out/reports/omnibioai_ecosystem_report.html
+--out PATH               default ${WORK_DIR}/out/reports/omnibioai_ecosystem_report.html
 --skip-health            skip live health fetch
 --skip-coverage          skip pytest coverage collection
 """
@@ -32,6 +32,7 @@ import argparse
 import json
 import re
 import shutil
+import os
 import subprocess
 import sys
 import urllib.error
@@ -63,7 +64,12 @@ DEFAULT_TARGETS = [
     "omnibioai-api-gateway", "omnibioai-hpc-policy-engine", "omnibioai-docs", "omnibioai-auth", "omnibioai-landing", "omnibioai-design-tokens", "omnibioai-ui",
 ]
 
-DEFAULT_OUT_RELPATH        = "work/out/reports/omnibioai_ecosystem_report.html"
+# Use WORK_DIR env var if set, otherwise fall back to omnibioai-work/
+_work_dir = Path(os.environ.get(
+    "WORK_DIR",
+    str(Path(__file__).resolve().parent.parent.parent / "omnibioai-work")
+))
+DEFAULT_OUT_PATH = _work_dir / "out" / "reports" / "omnibioai_ecosystem_report.html"
 DEFAULT_TITLE              = "OmniBioAI Ecosystem"
 DEFAULT_CONTROL_CENTER_URL = "http://127.0.0.1:7070"
 
@@ -1902,7 +1908,7 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate OmniBioAI ecosystem report")
     p.add_argument("--root", type=Path, default=None)
     p.add_argument("--targets", nargs="+", default=None)
-    p.add_argument("--out", default=DEFAULT_OUT_RELPATH)
+    p.add_argument("--out", default=str(DEFAULT_OUT_PATH))
     p.add_argument("--title", default=DEFAULT_TITLE)
     p.add_argument("--health-url", "--control-center-url",
                    default=DEFAULT_CONTROL_CENTER_URL,
@@ -1913,7 +1919,7 @@ def parse_args() -> argparse.Namespace:
 
 def generate_report(ecosystem_root: Path,
                     targets: Optional[List[str]] = None,
-                    out_relpath: str = DEFAULT_OUT_RELPATH,
+                    out_relpath: str = str(DEFAULT_OUT_PATH),
                     title: str = DEFAULT_TITLE,
                     control_center_url: str = DEFAULT_CONTROL_CENTER_URL,
                     skip_health: bool = False,
@@ -1945,7 +1951,8 @@ def generate_report(ecosystem_root: Path,
             "branches","partial_branches","coverage_pct","coverage_band",
             "fail_under","total_line","stderr_tail"])
     else:
-        precomputed_dir = ecosystem_root / "work" / "out" / "coverage"
+        work_dir = Path(os.environ.get("WORK_DIR", str(ecosystem_root / "omnibioai-work")))
+        precomputed_dir = work_dir / "out" / "coverage"
         if precomputed_dir.is_dir():
             print(f"→ Loading pre-computed coverage from {precomputed_dir}…")
         else:
