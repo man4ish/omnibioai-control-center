@@ -7,7 +7,7 @@ run_coverage_host.py — Run pytest coverage for each OmniBioAI repo on the host
 Runs on the developer machine (not inside the control-center container) so each
 repo's dependencies are already installed.  Saves a per-repo result JSON to:
 
-  <root>/out/coverage/<repo_name>.json
+  <root>/work/out/coverage/<repo_name>.json
 
 The control-center container reads those files (via the /workspace volume mount)
 instead of running pytest itself, which would fail due to missing package installs.
@@ -419,7 +419,7 @@ def main() -> int:
 
     root     = args.root.resolve()
     repos    = args.repos or REPOS
-    out_dir  = root / "out" / "coverage"
+    out_dir  = root / "work" / "out" / "coverage"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Root   : {root}")
