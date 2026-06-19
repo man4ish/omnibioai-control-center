@@ -1453,6 +1453,176 @@ hlthFetch();
 </script>
 """
 
+def llm_section_html(control_center_url: str) -> str:
+    """Fetch Ollama models and API key status from control center."""
+    import urllib.request, json
+
+    models = []
+    api_keys = {}
+    ollama_status = "unreachable"
+
+    try:
+        with urllib.request.urlopen(
+            f"{control_center_url.rstrip('/')}/llms", timeout=5
+        ) as r:
+            data = json.loads(r.read())
+            models = data.get("ollama", {}).get("models", [])
+            ollama_status = data.get("ollama", {}).get("status", "unknown")
+            api_keys = data.get("api_keys", {})
+    except Exception:
+        pass
+
+    model_rows = ""
+    for m in models:
+        size = m.get("size_gb", 0)
+        name = m.get("name", "")
+        modified = m.get("modified", "")
+        model_rows += f"""
+          <tr>
+            <td style="padding:10px 16px;font-family:monospace;color:#a855f7">{name}</td>
+            <td style="padding:10px 16px;color:var(--color-text-soft)">{size} GB</td>
+            <td style="padding:10px 16px;color:var(--color-text-muted)">{modified}</td>
+          </tr>"""
+
+    if not model_rows:
+        model_rows = '<tr><td colspan="3" style="padding:20px 16px;color:var(--color-text-muted)">No models installed or Ollama unreachable</td></tr>'
+
+    key_rows = ""
+    for key, info in api_keys.items():
+        configured = info.get("configured", False)
+        label = info.get("label", key)
+        badge_color = "#00e5a0" if configured else "#6b7280"
+        badge_bg = "rgba(0,229,160,0.15)" if configured else "rgba(107,114,128,0.15)"
+        badge_text = "CONFIGURED" if configured else "NOT SET"
+        key_rows += f"""
+          <tr>
+            <td style="padding:10px 16px;color:var(--color-text)">{label}</td>
+            <td style="padding:10px 16px">
+              <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;
+                background:{badge_bg};color:{badge_color};
+                border:1px solid {badge_color}33">{badge_text}</span>
+            </td>
+          </tr>"""
+
+    if not key_rows:
+        key_rows = '<tr><td colspan="2" style="padding:20px 16px;color:var(--color-text-muted)">No API key data available</td></tr>'
+
+    ollama_badge = "🟢 running" if ollama_status == "running" else "🔴 unreachable"
+
+    return f"""
+<div class="tab-section" id="tab-llms" style="display:none">
+  <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Local LLMs</h2>
+  <p style="color:var(--color-text-muted);font-size:13px;margin-bottom:20px">
+    Ollama models installed on this machine · API key configuration status
+  </p>
+
+  <div style="background:var(--color-bg-surface);border:1px solid var(--color-border);
+    border-radius:10px;overflow:hidden;margin-bottom:20px">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--color-border);
+      display:flex;align-items:center;justify-content:space-between">
+      <span style="font-weight:700;font-size:13px">Ollama — Local LLMs</span>
+      <span style="font-size:12px;color:var(--color-text-muted)">{ollama_badge}</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="border-bottom:1px solid var(--color-border);
+          background:rgba(255,255,255,0.02)">
+          <th style="padding:8px 16px;text-align:left;font-size:10px;
+            font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+            color:var(--color-text-muted)">Model</th>
+          <th style="padding:8px 16px;text-align:left;font-size:10px;
+            font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+            color:var(--color-text-muted)">Size</th>
+          <th style="padding:8px 16px;text-align:left;font-size:10px;
+            font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+            color:var(--color-text-muted)">Modified</th>
+        </tr>
+      </thead>
+      <tbody>{model_rows}</tbody>
+    </table>
+  </div>
+
+  <div style="background:var(--color-bg-surface);border:1px solid var(--color-border);
+    border-radius:10px;overflow:hidden">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--color-border)">
+      <span style="font-weight:700;font-size:13px">Cloud API Keys</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <tbody>{key_rows}</tbody>
+    </table>
+  </div>
+</div>"""
+
+
+def cloud_section_html(control_center_url: str) -> str:
+    """Fetch cloud/HPC execution backend config from control center."""
+    import urllib.request, json
+
+    backends = {}
+    try:
+        with urllib.request.urlopen(
+            f"{control_center_url.rstrip('/')}/cloud", timeout=5
+        ) as r:
+            backends = json.loads(r.read())
+    except Exception:
+        pass
+
+    ICONS = {
+        "local": "🖥", "slurm": "⚡", "aws": "☁️",
+        "azure": "🔷", "gcp": "🟡", "kubernetes": "⎈"
+    }
+
+    cards = ""
+    for key, info in backends.items():
+        configured = info.get("configured", False)
+        label = info.get("label", key)
+        icon = ICONS.get(key, "🔧")
+        border = "rgba(0,229,160,0.25)" if configured else "var(--color-border)"
+        badge_color = "#00e5a0" if configured else "#6b7280"
+        badge_bg = "rgba(0,229,160,0.15)" if configured else "rgba(107,114,128,0.15)"
+        badge_text = "✓ CONFIGURED" if configured else "NOT CONFIGURED"
+
+        details = ""
+        for field in ["region", "project", "account", "queue", "host", "context", "note"]:
+            val = info.get(field, "")
+            if val:
+                details += f"""<div style="display:flex;gap:8px;font-size:11px;margin-top:4px">
+                  <span style="color:var(--color-text-muted);min-width:60px">{field}</span>
+                  <span style="font-family:monospace;color:var(--color-text-soft)">{val}</span>
+                </div>"""
+
+        cards += f"""
+          <div style="background:var(--color-bg-surface);
+            border:1px solid {border};border-radius:10px;
+            padding:16px 18px">
+            <div style="display:flex;align-items:center;
+              justify-content:space-between;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:20px">{icon}</span>
+                <span style="font-weight:700;font-size:14px">{label}</span>
+              </div>
+              <span style="font-size:10px;font-weight:700;padding:2px 8px;
+                border-radius:99px;background:{badge_bg};color:{badge_color};
+                border:1px solid {badge_color}33">{badge_text}</span>
+            </div>
+            {details}
+          </div>"""
+
+    if not cards:
+        cards = '<p style="color:var(--color-text-muted)">Could not reach control center</p>'
+
+    return f"""
+<div class="tab-section" id="tab-cloud" style="display:none">
+  <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Execution Backends</h2>
+  <p style="color:var(--color-text-muted);font-size:13px;margin-bottom:20px">
+    Cloud and HPC execution backend configuration status
+  </p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+    {cards}
+  </div>
+</div>"""
+
+
 def docker_section_html_UNUSED(control_center_url: str) -> str:  # kept for reference; not included in report (duplicate of React DockerPage)
     cc_url = control_center_url.rstrip("/")
     return f"""
@@ -1725,6 +1895,8 @@ def build_report(out_html: Path, title: str, timestamp: str,
     lang_html  = languages_section_html(language_totals, grand)
     cov_html   = coverage_section_html(coverage_df, timestamp)
     hlth_html  = health_section_html(health, control_center_url)
+    llms_html  = llm_section_html(control_center_url)
+    cloud_html = cloud_section_html(control_center_url)
 
     html = f"""<!doctype html>
 <html lang="en">
@@ -1797,6 +1969,8 @@ def build_report(out_html: Path, title: str, timestamp: str,
     <button class="tab-btn" onclick="openTab('tab-lang',this)">Languages</button>
     <button class="tab-btn" onclick="openTab('tab-cov',this)">Code Coverage</button>
     <button class="tab-btn" onclick="openTab('tab-health',this)">Health Status</button>
+    <button class="tab-btn" onclick="openTab('tab-llms',this)">LLMs</button>
+    <button class="tab-btn" onclick="openTab('tab-cloud',this)">Cloud</button>
   </div>
 
   {PAGINATION_JS}
@@ -1806,6 +1980,8 @@ def build_report(out_html: Path, title: str, timestamp: str,
   <div id="tab-lang"   class="tab-panel">{lang_html}</div>
   <div id="tab-cov"    class="tab-panel">{cov_html}</div>
   <div id="tab-health" class="tab-panel">{hlth_html}</div>
+  <div id="tab-llms"   class="tab-panel">{llms_html}</div>
+  <div id="tab-cloud"  class="tab-panel">{cloud_html}</div>
 
   <div class="footer">
     cloc counts exclude vendored/runtime directories and selected extensions per cloc policy.<br>
