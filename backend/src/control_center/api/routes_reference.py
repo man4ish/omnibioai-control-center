@@ -91,8 +91,11 @@ def get_reference() -> JSONResponse:
 
     db_status = {}
     for db in DATABASES:
-        db_path = ref_root / "databases" / db
-        db_status[db] = _dir_exists_nonempty(db_path)
+        db_status[db] = any([
+            _dir_exists_nonempty(ref_root / "databases" / db),
+            _dir_exists_nonempty(ref_root / "variants" / "human" / db),
+            _dir_exists_nonempty(ref_root / "variants" / "mouse" / db),
+        ])
 
     annotation_status: dict = {}
     for organism in ["human", "mouse"]:
