@@ -1650,14 +1650,14 @@ def reference_section_html(control_center_url: str) -> str:
     organisms = data.get("organisms", [])
     databases = data.get("databases", {})
 
-    ORGANISM_ICONS = {{
+    ORGANISM_ICONS = {
         "human": "🧬", "mouse": "🐭", "rat": "🐀",
         "zebrafish": "🐟", "drosophila": "🪰", "yeast": "🧫"
-    }}
-    ORGANISM_LABELS = {{
+    }
+    ORGANISM_LABELS = {
         "human": "Human", "mouse": "Mouse", "rat": "Rat",
         "zebrafish": "Zebrafish", "drosophila": "Drosophila", "yeast": "Yeast"
-    }}
+    }
 
     def check(ok: bool) -> str:
         color = "#00e5a0" if ok else "#374151"
@@ -1670,8 +1670,8 @@ def reference_section_html(control_center_url: str) -> str:
         assembly = org["assembly"]
         icon = ORGANISM_ICONS.get(name, "🧬")
         label = ORGANISM_LABELS.get(name, name.title())
-        indexes = org.get("indexes", {{}})
-        variants = org.get("variants", {{}})
+        indexes = org.get("indexes", {})
+        variants = org.get("variants", {})
 
         idx_cells = "".join(
             f'<td style="padding:8px 12px;text-align:center">{check(indexes.get(idx, False))}</td>'
@@ -1693,11 +1693,11 @@ def reference_section_html(control_center_url: str) -> str:
     if not org_rows:
         org_rows = '<tr><td colspan="11" style="padding:20px 16px;color:var(--color-text-muted)">No reference organisms found</td></tr>'
 
-    DB_LABELS = {{
+    DB_LABELS = {
         "clinvar": "ClinVar", "cosmic": "COSMIC", "dbsnp": "dbSNP",
         "gnomad": "gnomAD", "go": "Gene Ontology", "interpro": "InterPro",
         "pfam": "Pfam", "uniprot": "UniProt"
-    }}
+    }
     db_cards = ""
     for db, present in databases.items():
         color = "#00e5a0" if present else "#6b7280"
