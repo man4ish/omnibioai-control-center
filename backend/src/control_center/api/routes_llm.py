@@ -1,5 +1,7 @@
 from __future__ import annotations
+import asyncio
 import os
+from pathlib import Path
 import httpx
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -47,4 +49,138 @@ async def get_llms() -> JSONResponse:
             "models": models,
         },
         "api_keys": api_keys,
+    })
+
+
+def _count_json_files(abstracts_dir: Path) -> tuple[int, list[str]]:
+    """Count .json files across domain subdirs using scandir (runs in thread pool)."""
+    total = 0
+    domains: list[str] = []
+    try:
+        with os.scandir(abstracts_dir) as top:
+            for domain_entry in top:
+                if not domain_entry.is_dir():
+                    continue
+                count = 0
+                try:
+                    with os.scandir(domain_entry.path) as inner:
+                        for e in inner:
+                            if e.is_file() and e.name.endswith(".json"):
+                                count += 1
+                except OSError:
+                    pass
+                if count > 0:
+                    total += count
+                    domains.append(domain_entry.name)
+    except OSError:
+        pass
+    return total, domains
+
+
+def _list_index_domains(index_root: Path) -> list[str]:
+    """List non-empty domain dirs under the index root."""
+    domains: list[str] = []
+    try:
+        with os.scandir(index_root) as top:
+            for entry in top:
+                if entry.is_dir():
+                    try:
+                        if any(True for _ in os.scandir(entry.path)):
+                            domains.append(entry.name)
+                    except OSError:
+                        pass
+    except OSError:
+        pass
+    return domains
+
+
+async def _du_bytes(path: Path, timeout: float = 20.0) -> int:
+    """Return total bytes under path using du -sb."""
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "du", "-sb", str(path),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        return int(stdout.decode().split()[0])
+    except Exception:
+        return 0
+
+
+@router.get("/knowledge-base")
+async def get_knowledge_base() -> JSONResponse:
+    workspace = Path(os.environ.get("WORKSPACE_ROOT", "/workspace"))
+
+    pubmed_root = None
+    for candidate in [
+        workspace / "data" / "PubMed",
+        workspace / "omnibioai-data" / "data" / "PubMed",
+        workspace / "omnibioai-data" / "PubMed",
+    ]:
+        if candidate.exists():
+            pubmed_root = candidate
+            break
+
+    index_root = None
+    for candidate in [
+        workspace / "data" / "PubMed" / "Index",
+        workspace / "data" / "Index",
+        workspace / "omnibioai-data" / "data" / "Index",
+        workspace / "omnibioai-data" / "Index",
+    ]:
+        if candidate.exists():
+            index_root = candidate
+            break
+
+    # Run filesystem scans and RAG health check concurrently
+    loop = asyncio.get_event_loop()
+
+    abstracts_dir = (pubmed_root / "Abstracts") if pubmed_root else None
+
+    async def count_abstracts() -> tuple[int, list[str]]:
+        if abstracts_dir and abstracts_dir.exists():
+            return await loop.run_in_executor(None, _count_json_files, abstracts_dir)
+        return 0, []
+
+    async def list_indexed_domains() -> list[str]:
+        if index_root and index_root.exists():
+            return await loop.run_in_executor(None, _list_index_domains, index_root)
+        return []
+
+    async def get_index_size() -> int:
+        if index_root and index_root.exists():
+            return await _du_bytes(index_root)
+        return 0
+
+    async def check_rag() -> str:
+        try:
+            async with httpx.AsyncClient(timeout=3) as client:
+                r = await client.get("http://rag:8096/health")
+                return "running" if r.status_code == 200 else "degraded"
+        except Exception:
+            return "unreachable"
+
+    (abstract_count, domains_with_abstracts), indexed_domains, index_size_bytes, rag_status = (
+        await asyncio.gather(
+            count_abstracts(),
+            list_indexed_domains(),
+            get_index_size(),
+            check_rag(),
+        )
+    )
+
+    return JSONResponse({
+        "rag_status": rag_status,
+        "abstracts": {
+            "total": abstract_count,
+            "domains_with_abstracts": len(domains_with_abstracts),
+        },
+        "faiss_index": {
+            "domains_indexed": len(indexed_domains),
+            "size_gb": round(index_size_bytes / 1e9, 2),
+            "domain_list": sorted(indexed_domains)[:20],
+        },
+        "pubmed_root": str(pubmed_root) if pubmed_root else None,
+        "index_root": str(index_root) if index_root else None,
     })
