@@ -15,6 +15,8 @@ ORGANISMS = {
     "zebrafish":  ["GRCz11"],
     "drosophila": ["BDGP6"],
     "yeast":      ["R64"],
+    "chimpanzee": ["Pan_tro_3.0"],
+    "macaque":    ["Mmul_10"],
 }
 
 INDEXES = ["star", "bwa", "bowtie2", "salmon", "cellranger"]

@@ -1652,11 +1652,13 @@ def reference_section_html(control_center_url: str) -> str:
 
     ORGANISM_ICONS = {
         "human": "🧬", "mouse": "🐭", "rat": "🐀",
-        "zebrafish": "🐟", "drosophila": "🪰", "yeast": "🧫"
+        "zebrafish": "🐟", "drosophila": "🪰", "yeast": "🧫",
+        "chimpanzee": "🐒", "macaque": "🐵",
     }
     ORGANISM_LABELS = {
         "human": "Human", "mouse": "Mouse", "rat": "Rat",
-        "zebrafish": "Zebrafish", "drosophila": "Drosophila", "yeast": "Yeast"
+        "zebrafish": "Zebrafish", "drosophila": "Drosophila", "yeast": "Yeast",
+        "chimpanzee": "Chimpanzee", "macaque": "Macaque",
     }
 
     def check(ok: bool) -> str:
