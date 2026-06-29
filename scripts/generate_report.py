@@ -62,6 +62,8 @@ DEFAULT_TARGETS = [
     "omnibioai-videos", "omnibioai-iam-client", "omnibioai-policy-engine",
     "omnibioai-security-audit", "omnibioai-security-sdk",
     "omnibioai-api-gateway", "omnibioai-hpc-policy-engine", "omnibioai-docs", "omnibioai-auth", "omnibioai-landing", "omnibioai-design-tokens", "omnibioai-ui",
+    "omnibioai-utils",
+    "omnibioai-launcher",
 ]
 
 # Use WORK_DIR env var if set, otherwise fall back to omnibioai-work/
