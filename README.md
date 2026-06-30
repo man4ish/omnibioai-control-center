@@ -16,6 +16,11 @@ The Control Center is a FastAPI service that aggregates health status across all
 - **Prometheus metrics** — `/metrics` endpoint scraped by Prometheus for Grafana dashboards
 - **Docker inventory** — platform containers, tool SIF images, and plugin Docker images via `/docker/*` endpoints
 - **Structured JSON logging** — all key events logged as JSON to stdout for log aggregation
+- **LLM monitoring** — local Ollama models and API key status via `/llms`
+- **Reference genome registry** — 14 organisms, indexes, variants via `/reference`
+- **AI Knowledge Base** — 35M PubMed abstracts, FAISS indexes via `/knowledge-base`
+- **Storage monitoring** — disk usage, per-organism reference indexes via `/storage`
+- **Cloud backends** — execution backend status via `/cloud`
 
 ## Architecture
 
@@ -38,7 +43,9 @@ omnibioai-control-center/
 │   │   │   ├── routes_health.py    # GET /health
 │   │   │   ├── routes_services.py  # GET /services
 │   │   │   ├── routes_summary.py   # GET /summary
-│   │   │   └── routes_report.py    # GET /report
+│   │   │   ├── routes_report.py    # GET /report
+│   │   │   ├── routes_llm.py       # GET /llms, /cloud, /knowledge-base, /storage
+│   │   │   └── routes_reference.py # GET /reference
 │   │   ├── checks/
 │   │   │   ├── http.py             # HTTP health checks
 │   │   │   ├── tcp.py              # TCP health checks (MySQL, Redis)
@@ -80,6 +87,11 @@ omnibioai-control-center/
 | `/docker/sif-images`   | GET    | Tool SIF image inventory and sizes |
 | `/docker/plugin-images`| GET    | Plugin Docker image inventory |
 | `/metrics`             | GET    | Prometheus metrics endpoint |
+| `/llms`                | GET    | Local LLM models + API key status |
+| `/cloud`               | GET    | Cloud/HPC execution backend status |
+| `/reference`           | GET    | Reference genome registry (14 organisms) |
+| `/knowledge-base`      | GET    | AI knowledge base stats (PubMed + FAISS) |
+| `/storage`             | GET    | Disk usage + per-organism index sizes |
 
 ### `/health`
 
@@ -244,20 +256,27 @@ uvicorn control_center.main:app --host 0.0.0.0 --port 7070 --reload
 | `WORKSPACE_ROOT`        | `/workspace`                  | Ecosystem root |
 | `CONTROL_CENTER_PORT`   | `7070`                        | Service port |
 | `REPORT_SCHEDULE_HOURS` | `6`                           | Auto-regenerate report every N hours |
+| `WORK_DIR`              | `/workspace/omnibioai-work`   | Path to work/output directory |
 
 ---
 
 ## Ecosystem Report
 
-The report is a single interactive HTML file with five tabs:
+The report is a single interactive HTML file with eleven tabs:
 
-| Tab | Contents |
-|-----|----------|
-| Architecture | SVG lane diagram of all services and connections |
-| Projects | Code line distribution across all repositories |
-| Languages | Language breakdown across the ecosystem |
-| Code Coverage | Per-repo pytest coverage with progress bars |
-| Health Status | Live service and disk health snapshot |
+| Tab               | Contents                                           |
+|-------------------|----------------------------------------------------|
+| Architecture      | SVG lane diagram of all services                   |
+| Projects          | Code line distribution across repositories         |
+| Languages         | Language breakdown across the ecosystem            |
+| Code Coverage     | Per-repo pytest coverage with progress bars        |
+| Health Status     | Live service and disk health snapshot              |
+| LLMs              | Local Ollama models + API key configuration        |
+| Cloud             | Cloud/HPC execution backend status                 |
+| Reference Data    | 14 organism genomes, indexes, variant databases    |
+| AI Knowledge Base | 35M PubMed abstracts, 108 FAISS indexes            |
+| Storage           | Disk usage bar, data categories, organism indexes  |
+| Docker Images     | Platform container and tool image inventory        |
 
 ### Generate
 
@@ -349,7 +368,7 @@ Tests use in-process HTTP servers — no external dependencies or running servic
 
 ---
 
-## Current Status — v0.2.0
+## Current Status — v0.4.0-beta
 
 | Feature | Status |
 |---------|--------|
@@ -372,6 +391,16 @@ Tests use in-process HTTP servers — no external dependencies or running servic
 | Docker inventory endpoints | ✓ Stable |
 | Structured JSON logging | ✓ Stable |
 | Design token CSS alignment | ✓ Stable |
+| LLM monitoring (/llms) | ✓ Stable |
+| Cloud backend status (/cloud) | ✓ Stable |
+| Reference genome registry | ✓ Stable — 14 organisms |
+| AI Knowledge Base (/knowledge-base) | ✓ Stable — 35M abstracts |
+| Storage monitoring (/storage) | ✓ Stable |
+| Report — LLMs tab | ✓ Stable |
+| Report — Cloud tab | ✓ Stable |
+| Report — Reference Data tab | ✓ Stable |
+| Report — AI Knowledge Base tab | ✓ Stable |
+| Report — Storage tab | ✓ Stable |
 | Historical tracking | Planned |
 | Alert hooks (Slack, email) | Planned |
 | Trend view | Planned |
