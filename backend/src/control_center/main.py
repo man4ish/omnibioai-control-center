@@ -40,6 +40,7 @@ from control_center.api.routes_llm import router as llm_router
 from control_center.api.routes_reference import router as reference_router
 from control_center.api.routes_report import router as report_router
 from control_center.api.routes_services import router as services_router
+from control_center.api.routes_storage import router_storage
 from control_center.api.routes_summary import router as summary_router
 
 
@@ -92,6 +93,7 @@ app.include_router(docker_router)
 app.include_router(llm_router)
 app.include_router(cloud_router)
 app.include_router(reference_router)
+app.include_router(router_storage)
 
 
 # ==============================================================================
