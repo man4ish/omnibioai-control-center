@@ -16,7 +16,11 @@ ORGANISMS = {
     "drosophila": ["BDGP6"],
     "yeast":      ["R64"],
     "chimpanzee": ["Pan_tro_3.0"],
-    "macaque":    ["Mmul_10"],
+    "macaque":      ["Mmul_10"],
+    "celegans":     ["WBcel235"],
+    "arabidopsis":  ["TAIR10"],
+    "pig":          ["Sscrofa11.1"],
+    "chicken":      ["GRCg7b"],
 }
 
 INDEXES = ["star", "bwa", "bowtie2", "salmon", "cellranger"]
