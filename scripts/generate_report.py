@@ -1755,6 +1755,12 @@ def reference_section_html(control_center_url: str) -> str:
         <tbody>{org_rows}</tbody>
       </table>
     </div>
+    <p style="font-size:11px;color:var(--color-text-muted);margin-top:8px;padding:0 4px">
+      * Zebrafish (GRCz11) STAR index requires 141GB RAM —
+      exceeds DGX Spark capacity (128GB).
+      Salmon and Bowtie2 indexes available.
+      STAR index will be added post-launch.
+    </p>
   </div>
 
   <div style="background:var(--color-bg-surface);border:1px solid var(--color-border);
